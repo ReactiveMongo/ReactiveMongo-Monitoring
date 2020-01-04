@@ -56,6 +56,7 @@ object Common extends AutoPlugin {
       Resolver.typesafeRepo("releases")),
     mimaFailOnNoPrevious := false,
     closeableObject in Test := "Common$",
+    testOptions in Test += Tests.Cleanup(cleanup.value),
     pomPostProcess := {
       val next: XmlElem => Option[XmlElem] = providedInternalDeps
 

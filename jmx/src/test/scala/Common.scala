@@ -40,7 +40,11 @@ object Common {
     Await.result(_db.flatMap { d => d.drop.map(_ => d) }, timeout)
   }
 
+  val onClose = Seq.newBuilder[() => Unit]
+
   def close(): Unit = try {
     Await.result(driver.close(), timeout)
+
+    onClose.result().foreach(_())
   } catch { case _: Throwable => () }
 }
