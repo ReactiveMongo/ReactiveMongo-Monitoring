@@ -9,6 +9,7 @@ import javax.management.{
   ObjectName
 }
 
+import scala.collection.mutable.{ Map => MMap }
 import scala.reflect.ClassTag
 
 import reactivemongo.api.MongoConnectionOptions
@@ -22,12 +23,7 @@ final class ConnectionListener
   import java.lang.management.ManagementFactory
   import javax.management.MBeanServer
 
-  /* Logging prefix */
-  private var lnm = "unknown"
-
   private lazy val mbs: MBeanServer = ManagementFactory.getPlatformMBeanServer()
-
-  private var unregister: () => Unit = () => {}
 
   @inline private def nodeProps(node: NodeInfo) = {
     val props = new Hashtable[String, String]()
@@ -37,19 +33,13 @@ final class ConnectionListener
     props
   }
 
-  private var nodeObjName: NodeInfo => ObjectName = { node: NodeInfo =>
-    new ObjectName("org.reactivemongo", nodeProps(node))
-  }
-
-  private var createNode: () => Node = () => new Node("unknown", "unknown")
-
   private lazy val nodeSet: NodeSet = new NodeSet()
 
   // Handler functions
 
-  def poolCreated(options: MongoConnectionOptions, supervisor: String, connection: String): Unit = {
-    lnm = s"$supervisor/$connection"
+  private val poolNames = MMap.empty[(String, String), ObjectName]
 
+  def poolCreated(options: MongoConnectionOptions, supervisor: String, connection: String): Unit = {
     val props = new Hashtable[String, String]()
     props.put("type", "NodeSet")
 
@@ -61,29 +51,20 @@ final class ConnectionListener
 
     mbs.registerMBean(nodeSet, objName)
 
-    unregister = () => {
-      logger.info(s"[$lnm] Unregister the NodeSet MBean: $objName")
-
-      nodeSet.sendNotification("stateChange", domain,
-        "The connection pool is being terminated")
-
-      mbs.unregisterMBean(objName)
-    }
-
-    createNode = () => new Node(supervisor, connection)
-    nodeObjName = { node: NodeInfo =>
-      new ObjectName(
-        s"org.reactivemongo.$supervisor.$connection", nodeProps(node))
-    }
+    poolNames += (supervisor -> connection) -> objName
 
     nodeSet.sendNotification("stateChange", domain,
       "The connection pool is has been created")
 
   }
 
-  private val nodes = scala.collection.mutable.Map.empty[String, Node]
+  private val nodes = MMap.empty[(String, String), MMap[String, Node]]
 
-  def nodeSetUpdated(previous: NodeSetInfo, updated: NodeSetInfo): Unit = {
+  def nodeSetUpdated(
+    supervisor: String,
+    connection: String,
+    previous: NodeSetInfo,
+    updated: NodeSetInfo): Unit = {
     nodeSet.update(updated)
 
     def nodeMap(ns: NodeSetInfo): Map[String, NodeInfo] =
@@ -93,17 +74,21 @@ final class ConnectionListener
     val prev = nodeMap(previous)
     val upd = nodeMap(updated)
 
-    nodes.synchronized {
+    val ns = nodes.getOrElseUpdate(
+      (supervisor -> connection), MMap.empty[String, Node])
+
+    ns.synchronized {
       val rmd = prev -- upd.keys
 
       // Removed nodes
       rmd.foreach {
         case (name, removed) =>
-          lazy val objName = nodeObjName(removed)
+          lazy val objName = new ObjectName(
+            s"org.reactivemongo.$supervisor.$connection", nodeProps(removed))
 
           try {
             mbs.unregisterMBean(objName)
-            nodes -= name
+            ns -= name
 
             nodeSet.sendNotification("nodeRemoved", objName,
               s"The node is no longer available: $name")
@@ -120,12 +105,14 @@ final class ConnectionListener
       // Added nodes
       (upd -- prev.keys).foreach {
         case (name, added) =>
-          val node = createNode()
-          lazy val objName = nodeObjName(added)
+          val node = new Node(supervisor, connection)
+
+          lazy val objName = new ObjectName(
+            s"org.reactivemongo.$supervisor.$connection", nodeProps(added))
 
           try {
             mbs.registerMBean(node, objName)
-            nodes += name -> node
+            ns += name -> node
             node.update(added)
 
             nodeSet.sendNotification("nodeAdded", objName,
@@ -143,7 +130,7 @@ final class ConnectionListener
       // Updated nodes
       (prev -- rmd.keys).foreach {
         case (name, node) => try {
-          nodes.get(name).foreach { bean =>
+          ns.get(name).foreach { bean =>
             bean.update(node)
 
             nodeSet.sendNotification("nodeUpdated", name,
@@ -158,10 +145,10 @@ final class ConnectionListener
     }
   }
 
-  def poolShutdown(supervisor: String, connection: String) = {
-    nodes.foreach {
+  private def unregisterNodes(ns: MMap[String, Node]): Unit =
+    ns.foreach {
       case (name, node) =>
-        nodes -= name
+        ns -= name
 
         try {
           val props = new Hashtable[String, String]()
@@ -175,11 +162,47 @@ final class ConnectionListener
           mbs.unregisterMBean(objName)
         } catch {
           case reason: Throwable =>
-            logger.warn(s"Fails to unregister the node MBean: $name", reason)
+            logger.warn(
+              s"Fails to unregister the node MBean: $name", reason)
         }
     }
 
-    unregister()
+  def poolShutdown(supervisor: String, connection: String) = {
+    val key = supervisor -> connection
+
+    poolNames.get(key).foreach { name =>
+      try {
+        mbs.unregisterMBean(name)
+      } catch {
+        case reason: Throwable =>
+          logger.warn(
+            s"Fails to unregister the pool MBean: $name", reason)
+      }
+    }
+
+    nodes.remove(key).foreach { ns =>
+      ns.synchronized {
+        unregisterNodes(ns)
+      }
+    }
+  }
+
+  def shutdown(): Unit = {
+    poolNames.values.foreach { name =>
+      try {
+        mbs.unregisterMBean(name)
+      } catch {
+        case reason: Throwable =>
+          logger.warn(
+            s"Fails to unregister the pool MBean: $name", reason)
+      }
+    }
+
+    nodes.values.foreach { ns =>
+      ns.synchronized {
+        unregisterNodes(ns)
+      }
+    }
   }
 }
 

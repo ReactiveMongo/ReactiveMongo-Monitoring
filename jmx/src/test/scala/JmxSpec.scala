@@ -21,7 +21,7 @@ import external.reactivemongo.ConnectionListener
 
 import reactivemongo.jmx.{ Node, NodeSet }
 
-class JmxSpec(implicit ee: ExecutionEnv)
+final class JmxSpec(implicit ee: ExecutionEnv)
   extends org.specs2.mutable.Specification {
 
   "JMX" title
@@ -34,8 +34,12 @@ class JmxSpec(implicit ee: ExecutionEnv)
     lazy val listener = ConnectionListener()
 
     "be resolved as the default one" in {
-      listener.map(_.getClass.getName) must beSome(
-        "reactivemongo.jmx.ConnectionListener")
+      listener must beSome[ConnectionListener].like {
+        case l: reactivemongo.jmx.ConnectionListener =>
+          Common.onClose += l.shutdown _
+
+          ok
+      }
     }
   }
 

@@ -23,7 +23,15 @@ lazy val jmx = (project in file("jmx")).settings(Seq(
   scalacOptions += "-P:silencer:globalFilters=.*NodeSetInfo\\ in\\ package\\ nodeset.*;.*name\\ in\\ class\\ MongoConnection.*"
 ))
 
+lazy val kamon = (project in file("kamon")).settings(Seq(
+  name := s"${baseName}-kamon",
+  description := "ReactiveMongo Kamon module",
+  libraryDependencies ++= Seq(
+    "io.kamon" %% "kamon-core" % "2.0.4" % Provided)
+))
+
 lazy val root = (project in file(".")).settings(
   publish := ({}),
-  publishTo := None
-).aggregate(jmx)
+  publishTo := None,
+  testOptions in Test := Seq.empty
+).aggregate(jmx, kamon)
