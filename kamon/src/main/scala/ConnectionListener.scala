@@ -103,7 +103,7 @@ final class ConnectionListener
       Kamon.gauge(
         name = "reactivemongo.pingTime",
         description = "Response delay (in milliseconds) for the last IsMaster request",
-        unit = MeasurementUnit.time.milliseconds).withTag("node", tag).update(node.pingInfo.ping / 1000L).increment(10D).decrement(6D)
+        unit = MeasurementUnit.time.milliseconds).withTag("node", tag).update(node.pingInfo.ping.toDouble / 1000D)
     }
   }
 

@@ -36,7 +36,7 @@ final class JmxSpec(implicit ee: ExecutionEnv)
     "be resolved as the default one" in {
       listener must beSome[ConnectionListener].like {
         case l: reactivemongo.jmx.ConnectionListener =>
-          Common.onClose += l.shutdown
+          Common.onClose += l.shutdown _
 
           ok
       }

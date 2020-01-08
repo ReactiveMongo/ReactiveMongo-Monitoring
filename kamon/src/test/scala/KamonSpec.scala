@@ -12,7 +12,7 @@ final class KamonSpec extends org.specs2.mutable.Specification {
 
     "be resolved as the default one" in {
       listener must beSome[ConnectionListener].like {
-        case l: reactivemongo.kamon.ConnectionListener => ok
+        case _: reactivemongo.kamon.ConnectionListener => ok
       }
     }
   }

@@ -32,5 +32,6 @@ lazy val kamon = (project in file("kamon")).settings(Seq(
 
 lazy val root = (project in file(".")).settings(
   publish := ({}),
-  publishTo := None
+  publishTo := None,
+  testOptions in Test := Seq.empty
 ).aggregate(jmx, kamon)
