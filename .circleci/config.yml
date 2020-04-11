@@ -184,16 +184,8 @@ jobs:
 workflows:
   version: 2
 
-  jdk10_scala211:
+  main_suite:
     jobs:
       - jdk10_scala211
-
-  jdk8_scala212:
-    jobs:
       - jdk8_scala212
-
-  jdk9_scala213:
-    jobs:
       - jdk9_scala213
-
-# TODO: Snapshot publish on master (nightly schedule?)
