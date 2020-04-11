@@ -1,7 +1,5 @@
 #! /bin/bash
 
-# TODO: Remove
-
 SCRIPT_DIR=`dirname $0 | sed -e "s|^\./|$PWD/|"`
 
 # Install MongoDB
@@ -24,8 +22,8 @@ if [ ! -L "$HOME/ssl/lib/libssl.so.1.0.0" ] && [ ! -f "$HOME/ssl/lib/libssl.so.1
   echo "[INFO] Building OpenSSL"
 
   cd /tmp
-  curl -s -o - https://www.openssl.org/source/openssl-1.0.1s.tar.gz | tar -xzf -
-  cd openssl-1.0.1s
+  curl -s -o - https://www.openssl.org/source/old/1.0.1/openssl-1.0.1u.tar.gz | tar -xzf -
+  cd openssl-1.0.1u
   rm -rf "$HOME/ssl" && mkdir "$HOME/ssl"
   ./config -shared enable-ssl2 --prefix="$HOME/ssl" > /dev/null
   make depend > /dev/null
@@ -36,6 +34,7 @@ if [ ! -L "$HOME/ssl/lib/libssl.so.1.0.0" ] && [ ! -f "$HOME/ssl/lib/libssl.so.1
 fi
 
 export LD_LIBRARY_PATH="$HOME/ssl/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH
 
 # MongoDB configuration
 MONGO_CONF="$SCRIPT_DIR/mongod.conf"
@@ -60,41 +59,3 @@ cat > /tmp/validate-env.sh <<EOF
 PATH="$PATH"
 LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
 EOF
-
-MONGOD_CMD="mongod -f /tmp/mongod.conf --fork"
-
-if [ `which numactl | wc -l` -gt 0 ]; then
-    numactl --interleave=all $MONGOD_CMD
-else
-    $MONGOD_CMD
-fi
-
-MONGOD_ST="$?"
-
-if [ ! $MONGOD_ST -eq 0 ]; then
-    echo -e "\nERROR: Fails to start the custom 'mongod' instance" > /dev/stderr
-    mongod --version
-    PID=`ps -ao pid,comm | grep 'mongod$' | cut -d ' ' -f 1`
-
-    if [ ! "x$PID" = "x" ]; then
-        pid -p $PID
-    fi
-
-    tail -n 100 /tmp/mongod.log
-
-    exit $MONGOD_ST
-fi
-
-# Check Mongo connection
-PRIMARY_HOST="localhost:27017"
-MONGOSHELL_OPTS="$PRIMARY_HOST/FOO"
-
-MONGOSHELL_OPTS="$MONGOSHELL_OPTS --eval"
-MONGODB_NAME=`mongo $MONGOSHELL_OPTS 'db.getName()' 2>/dev/null | tail -n 1`
-
-if [ ! "x$MONGODB_NAME" = "xFOO" ]; then
-    echo -n "\nERROR: Fails to connect using the MongoShell\n"
-    mongo $MONGOSHELL_OPTS 'db.getName()'
-    tail -n 100 /tmp/mongod.log
-    exit 2
-fi
