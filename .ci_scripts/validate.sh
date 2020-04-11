@@ -6,7 +6,7 @@ SCRIPT_DIR=`dirname $0 | sed -e "s|^\./|$PWD/|"`
 
 cd "$SCRIPT_DIR/.."
 
-sbt ++$TRAVIS_SCALA_VERSION scalariformFormat test:scalariformFormat
+sbt ++$SCALA_VERSION scalariformFormat test:scalariformFormat
 git diff --exit-code || (
   echo "ERROR: Scalariform check failed, see differences above."
   echo "To fix, format your sources using ./build scalariformFormat test:scalariformFormat before submitting a pull request."
@@ -21,7 +21,7 @@ export SBT_OPTS
 
 TEST_ARGS=";mimaReportBinaryIssues"
 
-if [ ! `echo "n$TRAVIS_SCALA_VERSION" | sed -e 's/2.13.*/o/'` = "no" ]; then
+if [ ! `echo "n$SCALA_VERSION" | sed -e 's/2.13.*/o/'` = "no" ]; then
   TEST_ARGS=";scapegoat $TEST_ARGS"
 fi
 
@@ -35,4 +35,4 @@ cat > /dev/stdout <<EOF
 - Test arguments: $TEST_ARGS
 EOF
 
-sbt ++$TRAVIS_SCALA_VERSION "$TEST_ARGS"
+sbt ++$SCALA_VERSION "$TEST_ARGS"

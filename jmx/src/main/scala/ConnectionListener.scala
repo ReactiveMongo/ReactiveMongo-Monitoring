@@ -383,7 +383,7 @@ final class Node private[jmx] (
     val _connections = info.connections
     val _connected = info.connected
     val _authenticated = info.authenticated
-    val _tags = info._tags.mkString("{", ", ", "}")
+    val _tags = info.tags.mkString("{", ", ", "}")
     val _mongos = info.isMongos
 
     val _protocolMetadata = {
