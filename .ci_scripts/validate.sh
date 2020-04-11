@@ -25,9 +25,25 @@ if [ ! `echo "n$SCALA_VERSION" | sed -e 's/2.13.*/o/'` = "no" ]; then
   TEST_ARGS=";scapegoat $TEST_ARGS"
 fi
 
-TEST_ARGS="$TEST_ARGS ;testOnly"
+# Check Mongo connection
+source /tmp/validate-env.sh
+export LD_LIBRARY_PATH
 
-TEST_ARGS="$TEST_ARGS ;doc"
+PRIMARY_HOST="localhost:27017"
+MONGOSHELL_OPTS="$PRIMARY_HOST/FOO"
+
+MONGOSHELL_OPTS="$MONGOSHELL_OPTS --eval"
+MONGODB_NAME=`mongo $MONGOSHELL_OPTS 'db.getName()' 2>/dev/null | tail -n 1`
+
+if [ ! "x$MONGODB_NAME" = "xFOO" ]; then
+    echo -n "\nERROR: Fails to connect using the MongoShell\n"
+    mongo $MONGOSHELL_OPTS 'db.getName()'
+    tail -n 100 /tmp/mongod.log
+    exit 2
+fi
+
+# Run tests
+TEST_ARGS="$TEST_ARGS ;testOnly; doc"
 
 cat > /dev/stdout <<EOF
 - JVM options: $JVM_OPTS
