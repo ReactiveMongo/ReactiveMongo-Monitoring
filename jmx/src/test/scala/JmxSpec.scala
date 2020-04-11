@@ -21,6 +21,8 @@ import external.reactivemongo.ConnectionListener
 
 import reactivemongo.jmx.{ Node, NodeSet }
 
+import reactivemongo.tests
+
 final class JmxSpec(implicit ee: ExecutionEnv)
   extends org.specs2.mutable.Specification {
 
@@ -123,7 +125,7 @@ final class JmxSpec(implicit ee: ExecutionEnv)
                     case v => v.toString
                   }
               }) must beSuccessfulTry[List[String]](List(
-                Common.connection.name,
+                tests.name(Common.connection),
                 s"$host:$port", // name
                 "", // aliases
                 host,
@@ -144,20 +146,21 @@ final class JmxSpec(implicit ee: ExecutionEnv)
       case bi => Option(bi.getObjectName).flatMap(
         _.toString.drop(18).takeWhile(_ != ':').
           split("\\.").reverse.headOption).
-        aka("connection fragment") must beSome(Common.connection.name) and {
-          bi.getClassName must_== beanType
-        } and {
-          Try(mbs getMBeanInfo bi.getObjectName).
-            aka("MBean info") must beSuccessfulTry[MBeanInfo].like {
-              case info => info.getAttributes.map(attr => {
-                (attr.getName, attr.getType, attr.isReadable, attr.isWritable)
-              }).toSeq must containAllOf(attrs) and {
-                info.getOperations aka "operations" must beEmpty
-              } and {
-                info.getNotifications must_== notifInfo
+        aka("connection fragment") must beSome(
+          tests.name(Common.connection)) and {
+            bi.getClassName must_== beanType
+          } and {
+            Try(mbs getMBeanInfo bi.getObjectName).
+              aka("MBean info") must beSuccessfulTry[MBeanInfo].like {
+                case info => info.getAttributes.map(attr => {
+                  (attr.getName, attr.getType, attr.isReadable, attr.isWritable)
+                }).toSeq must containAllOf(attrs) and {
+                  info.getOperations aka "operations" must beEmpty
+                } and {
+                  info.getNotifications must_== notifInfo
+                }
               }
-            }
-        }
+          }
     }
 
   def nodeMBean: Future[ObjectInstance] = {
