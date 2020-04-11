@@ -58,17 +58,20 @@ commands:
                       -print -exec cp {} test-reports \;
           when: always
 
-  update_cache:
+  update_cache: # TODO: Improve cross job cache (common & 
     description: Update cache
     steps:
+      - save_cache:
+          paths:
+            - ~/sbt
+            - ~/mongodb-linux-x86_64-amazon-4.2.2
+            - ~/ssl
+          key: tooling
       - save_cache:
           paths:
             - ~/.ivy2
             - ~/.coursier/cache
             - ~/.sbt
-            - ~/sbt
-            - ~/mongodb-linux-x86_64-amazon-4.2.2
-            - ~/ssl
           key: d-{{ .Environment.CIRCLE_JOB }}-{{ checksum "build.sbt" }}-{{ checksum "project/Dependencies.scala" }}
 
 jobs:
@@ -89,7 +92,7 @@ jobs:
       - restore_cache:
           keys:
           - d-{{ .Environment.CIRCLE_JOB }}-{{ checksum "build.sbt" }}-{{ checksum "project/Dependencies.scala" }}
-          - dependencies-
+          - tooling
 
       - setup_integration
 
@@ -118,7 +121,7 @@ jobs:
       - restore_cache:
           keys:
           - d-{{ .Environment.CIRCLE_JOB }}-{{ checksum "build.sbt" }}-{{ checksum "project/Dependencies.scala" }}
-          - dependencies-
+          - tooling
 
       - setup_integration
 
@@ -166,7 +169,7 @@ jobs:
       - restore_cache:
           keys:
           - d-{{ .Environment.CIRCLE_JOB }}-{{ checksum "build.sbt" }}-{{ checksum "project/Dependencies.scala" }}
-          - dependencies-
+          - tooling
 
       - setup_integration
 
