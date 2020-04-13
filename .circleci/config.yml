@@ -141,6 +141,10 @@ jobs:
       - store_test_results:
           path: test-reports
 
+      - restore_cache:
+          keys:
+          - scala-{{ .Environment.CIRCLE_JOB }}-{{ checksum "build.sbt" }}-{{ checksum "project/Dependencies.scala" }}
+
       - deploy:
           name: Publish artifacts to Sonatype Snapshots
           command: |
@@ -159,6 +163,13 @@ jobs:
                     fi
                     
                     sbt +publish
+
+      - save_cache:
+          paths:
+            - ~/.ivy2
+            - ~/.coursier/cache
+            - ~/.sbt
+          key: scala-{{ .Environment.CIRCLE_JOB }}-{{ checksum "build.sbt" }}-{{ checksum "project/Dependencies.scala" }}
 
   jdk9_scala213:
     docker:
