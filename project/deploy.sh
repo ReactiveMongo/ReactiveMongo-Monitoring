@@ -33,7 +33,7 @@ function deploy {
     expect << EOF
 set timeout 300
 log_user 0
-spawn mvn gpg:sign-and-deploy-file -Dkeyname=$KEY -Dpassphrase=$ÄSS -DpomFile=$POM -Dfile=$JAR $ARG -Durl=$REPO -DrepositoryId=sonatype-nexus-staging
+spawn mvn gpg:sign-and-deploy-file -Dkeyname=$KEY -Dpassphrase=$PASS -DpomFile=$POM -Dfile=$JAR $ARG -Durl=$REPO -DrepositoryId=sonatype-nexus-staging
 log_user 1
 expect "BUILD SUCCESS"
 expect eof
