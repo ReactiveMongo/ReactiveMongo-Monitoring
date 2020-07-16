@@ -172,7 +172,7 @@ workflows:
 
       - build_n_test:
           name: jdk9_scala213
-          scala_version: 2.13.2
+          scala_version: 2.13.3
           openjdk_version: 9
 
       - publish_snapshots:

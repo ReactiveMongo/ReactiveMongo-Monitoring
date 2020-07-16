@@ -37,7 +37,7 @@ object Common {
   lazy val db = {
     val _db = connection.database(dbName, failoverStrategy)
 
-    Await.result(_db.flatMap { d => d.drop.map(_ => d) }, timeout)
+    Await.result(_db.flatMap { d => d.drop().map(_ => d) }, timeout)
   }
 
   val onClose = Seq.newBuilder[() => Unit]
