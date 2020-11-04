@@ -41,15 +41,6 @@ object Common extends AutoPlugin {
       "-unchecked", "-deprecation",
       /*"-diagrams", */"-implicits", "-skip-packages", "highlightextractor") ++
       Opts.doc.title(name.value),
-    /*
-    unmanagedSourceDirectories in Compile += {
-      val base = (sourceDirectory in Compile).value
-
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, n)) if n >= 13 => base / "scala-2.13+"
-        case _                       => base / "scala-2.13-"
-      }
-    },*/
     resolvers ++= Seq(
       Resolver.sonatypeRepo("staging"),
       Resolver.sonatypeRepo("snapshots"),
