@@ -99,7 +99,7 @@ jobs:
         type: string
 
     docker:
-      - image: circleci/openjdk:<< parameters.openjdk_version >>-jdk
+      - image: cchantep/circleci-openjdk:<< parameters.openjdk_version >>-jdk
 
     working_directory: ~/repo
 
@@ -117,7 +117,7 @@ jobs:
 
   publish_snapshots:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cchantep/circleci-openjdk:8-jdk
 
     working_directory: ~/repo
     
