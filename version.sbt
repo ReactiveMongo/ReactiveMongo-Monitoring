@@ -12,8 +12,8 @@ version in ThisBuild := {
               Seq(maj, min, patch) <- Stable.unapplySeq(previousVer)
               nextPatch <- scala.util.Try(patch.toInt).map(_ + 1).toOption
             } yield {
-              val suffix = descr.commitSuffix.sha
-              s"${maj}.${min}.${nextPatch}-${suffix}-SNAPSHOT"
+              //val suffix = descr.commitSuffix.sha
+              s"${maj}.${min}.${nextPatch}-SNAPSHOT"
             }).getOrElse {
               println(
                 s"Fails to determine qualified snapshot version: $previousVer")

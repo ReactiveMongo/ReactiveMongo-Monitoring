@@ -17,7 +17,7 @@ commands:
           command: |
                     if [ ! -x ~/sbt/bin/sbt ]; then
                       cd ~/
-                      curl --silent -L -o sbt.tgz https://piccolo.link/sbt-<< parameters.sbt_version >>.tgz
+                      curl --silent -L -o sbt.tgz https://github.com/sbt/sbt/releases/download/v<< parameters.sbt_version >>/sbt-<< parameters.sbt_version >>.tgz
                       tar -xzvf sbt.tgz && rm -f sbt.tgz
                     fi
 
@@ -99,7 +99,7 @@ jobs:
         type: string
 
     docker:
-      - image: circleci/openjdk:<< parameters.openjdk_version >>-jdk
+      - image: cchantep/circleci-openjdk:<< parameters.openjdk_version >>-jdk
 
     working_directory: ~/repo
 
@@ -117,7 +117,7 @@ jobs:
 
   publish_snapshots:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cchantep/circleci-openjdk:8-jdk
 
     working_directory: ~/repo
     
