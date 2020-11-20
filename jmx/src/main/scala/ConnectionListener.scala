@@ -10,10 +10,12 @@ import javax.management.{
 }
 
 import scala.collection.mutable.{ Map => MMap }
+
 import scala.reflect.ClassTag
 
 import reactivemongo.api.MongoConnectionOptions
-import reactivemongo.core.nodeset.{ NodeSetInfo, NodeInfo }
+
+import reactivemongo.core.nodeset.{ NodeInfo, NodeSetInfo }
 
 /** Listener definition for the connection events. */
 @SuppressWarnings(Array("CatchThrowable"))

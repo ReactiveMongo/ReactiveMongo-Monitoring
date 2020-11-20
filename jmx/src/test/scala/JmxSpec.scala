@@ -1,27 +1,18 @@
 import java.lang.management.ManagementFactory
-import javax.management.{
-  MBeanServer,
-  MBeanInfo,
-  MBeanNotificationInfo,
-  Notification,
-  NotificationListener,
-  ObjectInstance,
-  ObjectName
-}
+import javax.management.{ MBeanInfo, MBeanNotificationInfo, MBeanServer, Notification, NotificationListener, ObjectInstance, ObjectName }
 
 import scala.util.{ Failure, Success, Try }
 
 import scala.concurrent.{ Future, Promise }
 import scala.concurrent.duration._
 
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.matcher.MatchResult
+import reactivemongo.jmx.{ Node, NodeSet }
+import reactivemongo.tests
 
 import external.reactivemongo.ConnectionListener
 
-import reactivemongo.jmx.{ Node, NodeSet }
-
-import reactivemongo.tests
+import org.specs2.concurrent.ExecutionEnv
+import org.specs2.matcher.MatchResult
 
 final class JmxSpec(implicit ee: ExecutionEnv)
   extends org.specs2.mutable.Specification {

@@ -19,3 +19,5 @@ addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.12")
 addSbtPlugin("com.sksamuel.scapegoat" %% "sbt-scapegoat" % "1.1.0")
 
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
+
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.23")

@@ -3,16 +3,15 @@ package reactivemongo.kamon
 import scala.collection.mutable.{ Map => MMap }
 
 import kamon.Kamon
+import kamon.metric.MeasurementUnit
 import kamon.tag.TagSet
 import kamon.trace.Span
 
-import kamon.metric.MeasurementUnit
-
 import reactivemongo.api.MongoConnectionOptions
-import reactivemongo.core.nodeset.{ NodeSetInfo /*, NodeInfo*/ }
+
+import reactivemongo.core.nodeset.NodeSetInfo
 
 /** Listener definition for the connection events. */
-//@SuppressWarnings(Array("CatchThrowable"))
 final class ConnectionListener
   extends external.reactivemongo.ConnectionListener {
 
@@ -98,7 +97,7 @@ final class ConnectionListener
 
       ng(tag, "connectedChannels", "Number of connected channels to a same MongoDB node (see nodeChannels)").update(node.connected.toDouble)
 
-      ng(tag, "authenticatedChannels", "Number of authenticated channels to a same MongoDB node (see connectedChannels)").update(node.connected.toDouble)
+      ng(tag, "authenticatedChannels", "Number of authenticated channels to a same MongoDB node (see connectedChannels)").update(node.authenticated.toDouble)
 
       Kamon.gauge(
         name = "reactivemongo.pingTime",

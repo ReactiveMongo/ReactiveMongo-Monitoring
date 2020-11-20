@@ -3,7 +3,7 @@ ThisBuild / scalaVersion := "2.12.11"
 ThisBuild / crossScalaVersions := Seq(
   "2.11.12", scalaVersion.value, "2.13.3")
 
-ThisBuild / crossVersion := CrossVersion.binary
+crossVersion := CrossVersion.binary
 
 ThisBuild / scalacOptions ++= Seq(
   "-encoding", "UTF-8", "-target:jvm-1.8",
@@ -18,6 +18,7 @@ ThisBuild / scalacOptions ++= Seq(
 ThisBuild / scalacOptions ++= {
   if (scalaBinaryVersion.value == "2.12") {
     Seq(
+      "-Xmax-classfile-name", "128",
       "-Ywarn-numeric-widen",
       "-Ywarn-dead-code",
       "-Ywarn-value-discard",
@@ -27,13 +28,23 @@ ThisBuild / scalacOptions ++= {
       "-Ywarn-macros:after"
     )
   } else if (scalaBinaryVersion.value == "2.11") {
-    Seq("-Yopt:_", "-Ydead-code", "-Yclosure-elim", "-Yconst-opt")
+    Seq(
+      "-Xmax-classfile-name", "128",
+      "-Yopt:_", "-Ydead-code", "-Yclosure-elim", "-Yconst-opt")
   } else {
-    Seq("-Wmacros:after")
+    Seq(
+      "-explaintypes",
+      "-Werror",
+      "-Wnumeric-widen",
+      "-Wdead-code",
+      "-Wvalue-discard",
+      "-Wextra-implicit",
+      "-Wmacros:after",
+      "-Wunused")
   }
 }
 
-ThisBuild / scalacOptions in (Compile, console) ~= {
+scalacOptions in (Compile, console) ~= {
   _.filterNot(o =>
     o.startsWith("-X") || o.startsWith("-Y") || o.startsWith("-P:silencer"))
 }
@@ -54,7 +65,7 @@ scalacOptions in (Test, console) ~= {
 ThisBuild / libraryDependencies ++= {
   val silencerVersion = {
     if (scalaBinaryVersion.value == "2.11") "1.4.4"
-    else "1.7.0"
+    else "1.7.1"
   }
 
   Seq(
