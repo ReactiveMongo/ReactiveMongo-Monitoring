@@ -29,8 +29,8 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
 
     client.recordEvent(
       event.build(),
-      supervisor,
-      s"${supervisor}.${connection}")
+      s"supervisior:${supervisor}",
+      s"connection:${supervisor}.${connection}")
   }
 
   private val poolTags = MMap.empty[(String, String), Set[String]]
@@ -48,7 +48,10 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
     val prefix = updated.name.foldLeft(conPrefix) { (p, n) => s"$p.$n" }
 
     val key = supervisor -> connection
-    val tagSet = Set(supervisor, conPrefix, prefix)
+    val tagSet = Set(
+      s"supervisor:${supervisor}",
+      s"connection:${conPrefix}",
+      s"nodeset:${prefix}")
 
     poolTags.synchronized {
       poolTags.put(key, tagSet)
@@ -85,7 +88,7 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
     }
 
     updated.nodes.foreach { node =>
-      val nodeTags = tags :+ node.name
+      val nodeTags = tags :+ s"node:${node.name}"
 
       def ng(property: String, value: Int) =
         client.gauge(property, value.toLong, nodeTags: _*)
@@ -110,8 +113,8 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
     val reset = client.gauge(_: String, 0L, pts: _*)
 
     // Node set resetauresetes
-    reset("awaitinresetRequests")
-    reset("maxAwaitinresetRequestsPerChannel")
+    reset("awaitingRequests")
+    reset("maxAwaitingRequestsPerChannel")
     reset("numberOfNodes")
     reset("hasPrimary")
     reset("hasNearest")
@@ -122,12 +125,8 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
       nodes.remove(key)
     }).getOrElse(Vector.empty[String])
 
-    val conPrefix = s"${supervisor}.${connection}"
-    val tagSet = Set(supervisor, conPrefix)
-
     ns.foreach { node =>
-      val nts = (tagSet + node).toSeq
-
+      val nts = pts :+ s"node:${node}"
       val g = client.gauge(_: String, 0L, nts: _*)
 
       g("nodeChannels")
@@ -147,8 +146,8 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
 
     client.recordEvent(
       event.build(),
-      supervisor,
-      s"${supervisor}.${connection}")
+      s"supervisor:${supervisor}",
+      s"connection:${supervisor}.${connection}")
 
     ()
   }
