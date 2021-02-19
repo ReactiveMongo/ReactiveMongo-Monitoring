@@ -6,7 +6,7 @@ commands:
     parameters:
       sbt_version:
         type: string
-        default: "1.3.13"
+        default: "1.4.7"
     steps:
       - restore_cache:
           keys:
@@ -140,8 +140,9 @@ jobs:
                     V=`sbt 'show version' 2>&1 | tail -n 2 | cut -d ']' -f 2 | grep SNAPSHOT | sed -e 's/[ \t]*//g'`
 
                     if [ `echo "$V" | grep -- '-SNAPSHOT' | wc -l` -eq 0 ]; then
-                      echo "Cannot publish release $V"
-                      exit 0
+                      S=`echo "$V" | perl -pe 's/([0-9]+)$/${\($1 + 1)}-SNAPSHOT/'`
+                      echo "Cannot bump $V to $S"
+                      echo "version in ThisBuild := \"$S\"" > version.sbt
                     fi
                     
                     export PUBLISH_REPO_NAME="Sonatype Nexus Repository Manager"
@@ -168,19 +169,19 @@ workflows:
   main_suite:
     jobs:
       - build_n_test:
-          name: jdk10_scala211
+          name: jdk11_scala211
           scala_version: 2.11.12
-          openjdk_version: 10
+          openjdk_version: 11
 
       - build_n_test:
           name: jdk8_scala212
-          scala_version: 2.12.11
+          scala_version: 2.12.12
           openjdk_version: 8
 
       - build_n_test:
-          name: jdk9_scala213
-          scala_version: 2.13.3
-          openjdk_version: 9
+          name: jdk10_scala213
+          scala_version: 2.13.4
+          openjdk_version: 10
 
       - publish_snapshots:
           filters:
@@ -188,6 +189,6 @@ workflows:
               only:
                 - master
           requires:
-            - jdk10_scala211
+            - jdk11_scala211
             - jdk8_scala212
-            - jdk9_scala213
+            - jdk10_scala213
