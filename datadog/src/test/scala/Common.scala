@@ -7,29 +7,32 @@ object Common {
     MongoConnectionOptions
   }
 
-  implicit val ec = ExecutionContext.Implicits.global
+  implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
   val replSetOn = sys.props.get("test.replicaSet").fold(false) {
     case "true" => true
-    case _ => false
+    case _      => false
   }
 
-  val DefaultOptions = MongoConnectionOptions.default.copy(
-    nbChannelsPerNode = 2)
+  val DefaultOptions =
+    MongoConnectionOptions.default.copy(nbChannelsPerNode = 2)
 
   val primaryHost =
     sys.props.getOrElse("test.primaryHost", "localhost:27017")
 
-  val failoverRetries = sys.props.get("test.failoverRetries").
-    flatMap(r => scala.util.Try(r.toInt).toOption).getOrElse(7)
+  val failoverRetries = sys.props
+    .get("test.failoverRetries")
+    .flatMap(r => scala.util.Try(r.toInt).toOption)
+    .getOrElse(7)
 
   lazy val driver = new AsyncDriver
-  lazy val connection = Await.result(
-    driver.connect(List(primaryHost), DefaultOptions), timeout)
+
+  lazy val connection =
+    Await.result(driver.connect(List(primaryHost), DefaultOptions), timeout)
 
   val failoverStrategy = FailoverStrategy(retries = failoverRetries)
 
-  val timeout = 10.seconds //increaseTimeoutIfX509(10.seconds)
+  val timeout = 10.seconds // increaseTimeoutIfX509(10.seconds)
   val timeoutMillis = timeout.toMillis.toInt
 
   val dbName = "specs2-reactivemongo-jmx"
@@ -42,9 +45,10 @@ object Common {
 
   val onClose = Seq.newBuilder[() => Unit]
 
-  def close(): Unit = try {
-    Await.result(driver.close(), timeout)
+  def close(): Unit =
+    try {
+      Await.result(driver.close(), timeout)
 
-    onClose.result().foreach(_())
-  } catch { case _: Throwable => () }
+      onClose.result().foreach(_())
+    } catch { case _: Throwable => () }
 }

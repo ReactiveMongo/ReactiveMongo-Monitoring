@@ -20,7 +20,7 @@ import reactivemongo.core.nodeset.{ NodeInfo, NodeSetInfo }
 /** Listener definition for the connection events. */
 @SuppressWarnings(Array("CatchThrowable"))
 final class ConnectionListener
-  extends external.reactivemongo.ConnectionListener {
+    extends external.reactivemongo.ConnectionListener {
 
   import java.lang.management.ManagementFactory
   import javax.management.MBeanServer
@@ -41,7 +41,11 @@ final class ConnectionListener
 
   private val poolNames = MMap.empty[(String, String), ObjectName]
 
-  def poolCreated(options: MongoConnectionOptions, supervisor: String, connection: String): Unit = {
+  def poolCreated(
+      options: MongoConnectionOptions,
+      supervisor: String,
+      connection: String
+    ): Unit = {
     val props = new Hashtable[String, String]()
     props.put("type", "NodeSet")
 
@@ -55,29 +59,37 @@ final class ConnectionListener
 
     poolNames += (supervisor -> connection) -> objName
 
-    nodeSet.sendNotification("stateChange", domain,
-      "The connection pool is has been created")
+    nodeSet.sendNotification(
+      "stateChange",
+      domain,
+      "The connection pool is has been created"
+    )
 
   }
 
   private val nodes = MMap.empty[(String, String), MMap[String, Node]]
 
   def nodeSetUpdated(
-    supervisor: String,
-    connection: String,
-    previous: NodeSetInfo,
-    updated: NodeSetInfo): Unit = {
+      supervisor: String,
+      connection: String,
+      previous: NodeSetInfo,
+      updated: NodeSetInfo
+    ): Unit = {
     nodeSet.update(updated)
 
     def nodeMap(ns: NodeSetInfo): Map[String, NodeInfo] =
-      Option(ns).fold(List.empty[NodeInfo])(_.nodes.toList).
-        map { n => n.name -> n }.toMap
+      Option(ns)
+        .fold(List.empty[NodeInfo])(_.nodes.toList)
+        .map { n => n.name -> n }
+        .toMap
 
     val prev = nodeMap(previous)
     val upd = nodeMap(updated)
 
     val ns = nodes.getOrElseUpdate(
-      (supervisor -> connection), MMap.empty[String, Node])
+      (supervisor -> connection),
+      MMap.empty[String, Node]
+    )
 
     ns.synchronized {
       val rmd = prev -- upd.keys
@@ -86,14 +98,19 @@ final class ConnectionListener
       rmd.foreach {
         case (name, removed) =>
           lazy val objName = new ObjectName(
-            s"org.reactivemongo.$supervisor.$connection", nodeProps(removed))
+            s"org.reactivemongo.$supervisor.$connection",
+            nodeProps(removed)
+          )
 
           try {
             mbs.unregisterMBean(objName)
             ns -= name
 
-            nodeSet.sendNotification("nodeRemoved", objName,
-              s"The node is no longer available: $name")
+            nodeSet.sendNotification(
+              "nodeRemoved",
+              objName,
+              s"The node is no longer available: $name"
+            )
 
           } catch {
             case _: javax.management.InstanceNotFoundException =>
@@ -110,39 +127,48 @@ final class ConnectionListener
           val node = new Node(supervisor, connection)
 
           lazy val objName = new ObjectName(
-            s"org.reactivemongo.$supervisor.$connection", nodeProps(added))
+            s"org.reactivemongo.$supervisor.$connection",
+            nodeProps(added)
+          )
 
           try {
             mbs.registerMBean(node, objName)
             ns += name -> node
             node.update(added)
 
-            nodeSet.sendNotification("nodeAdded", objName,
-              s"The node is now available: $name")
+            nodeSet.sendNotification(
+              "nodeAdded",
+              objName,
+              s"The node is now available: $name"
+            )
 
           } catch {
             case _: javax.management.InstanceAlreadyExistsException =>
               logger.warn(s"The node MBean is already registered: $objName")
 
-            case reason: Throwable => logger.warn(
-              s"Fails to register the node MBean: $objName", reason)
+            case reason: Throwable =>
+              logger.warn(s"Fails to register the node MBean: $objName", reason)
           }
       }
 
       // Updated nodes
       (prev -- rmd.keys).foreach {
-        case (name, node) => try {
-          ns.get(name).foreach { bean =>
-            bean.update(node)
+        case (name, node) =>
+          try {
+            ns.get(name).foreach { bean =>
+              bean.update(node)
 
-            nodeSet.sendNotification("nodeUpdated", name,
-              s"The node properties have been updated: $name")
+              nodeSet.sendNotification(
+                "nodeUpdated",
+                name,
+                s"The node properties have been updated: $name"
+              )
 
+            }
+          } catch {
+            case reason: Throwable =>
+              logger.warn(s"Fails to update the node MBean: $name", reason)
           }
-        } catch {
-          case reason: Throwable => logger.warn(
-            s"Fails to update the node MBean: $name", reason)
-        }
       }
     }
   }
@@ -159,13 +185,13 @@ final class ConnectionListener
 
           val objName = new ObjectName(
             s"org.reactivemongo.${node.getSupervisor}.${node.getConnection}",
-            props)
+            props
+          )
 
           mbs.unregisterMBean(objName)
         } catch {
           case reason: Throwable =>
-            logger.warn(
-              s"Fails to unregister the node MBean: $name", reason)
+            logger.warn(s"Fails to unregister the node MBean: $name", reason)
         }
     }
 
@@ -177,8 +203,7 @@ final class ConnectionListener
         mbs.unregisterMBean(name)
       } catch {
         case reason: Throwable =>
-          logger.warn(
-            s"Fails to unregister the pool MBean: $name", reason)
+          logger.warn(s"Fails to unregister the pool MBean: $name", reason)
       }
     }
 
@@ -195,8 +220,7 @@ final class ConnectionListener
         mbs.unregisterMBean(name)
       } catch {
         case reason: Throwable =>
-          logger.warn(
-            s"Fails to unregister the pool MBean: $name", reason)
+          logger.warn(s"Fails to unregister the pool MBean: $name", reason)
       }
     }
 
@@ -211,10 +235,23 @@ final class ConnectionListener
 sealed trait NotificationSupport { self: NotificationBroadcasterSupport =>
   protected val changeSeq = new java.util.concurrent.atomic.AtomicLong()
 
-  protected def attributeChanged[T: ClassTag](name: String, message: String, oldValue: T, newValue: T)(f: T => Unit): Unit = if (oldValue != newValue) {
+  protected def attributeChanged[T: ClassTag](
+      name: String,
+      message: String,
+      oldValue: T,
+      newValue: T
+    )(f: T => Unit
+    ): Unit = if (oldValue != newValue) {
     val n = new AttributeChangeNotification(
-      this, changeSeq.incrementAndGet(), System.currentTimeMillis(),
-      message, name, implicitly[ClassTag[T]].toString, oldValue, newValue)
+      this,
+      changeSeq.incrementAndGet(),
+      System.currentTimeMillis(),
+      message,
+      name,
+      implicitly[ClassTag[T]].toString,
+      oldValue,
+      newValue
+    )
 
     f(newValue)
 
@@ -223,8 +260,10 @@ sealed trait NotificationSupport { self: NotificationBroadcasterSupport =>
 }
 
 @SuppressWarnings(Array("NullAssignment"))
-final class NodeSet private[jmx] () extends NotificationBroadcasterSupport
-  with NodeSetMBean with NotificationSupport {
+final class NodeSet private[jmx] ()
+    extends NotificationBroadcasterSupport
+    with NodeSetMBean
+    with NotificationSupport {
 
   private var options: String = null
   private var supervisor: String = null
@@ -256,9 +295,20 @@ final class NodeSet private[jmx] () extends NotificationBroadcasterSupport
 
   // Notification support
 
-  private[jmx] def sendNotification[T](typ: String, source: T, msg: String): Unit = {
-    sendNotification(new Notification(typ, source,
-      changeSeq.incrementAndGet(), System.currentTimeMillis(), msg))
+  private[jmx] def sendNotification[T](
+      typ: String,
+      source: T,
+      msg: String
+    ): Unit = {
+    sendNotification(
+      new Notification(
+        typ,
+        source,
+        changeSeq.incrementAndGet(),
+        System.currentTimeMillis(),
+        msg
+      )
+    )
   }
 
   override def getNotificationInfo() = NodeSet.notificationInfo
@@ -298,70 +348,108 @@ final class NodeSet private[jmx] () extends NotificationBroadcasterSupport
         i.maxAwaitingRequestsPerChannel.getOrElse(-1)
     }
 
-    attributeChanged("Name", "The name of node set has changed",
-      name, _name) { name = _ }
+    attributeChanged("Name", "The name of node set has changed", name, _name) {
+      name = _
+    }
 
     attributeChanged[java.lang.Long](
-      "Version", "The version of node set has changed",
-      version, _version) { version = _ }
+      "Version",
+      "The version of node set has changed",
+      version,
+      _version
+    ) { version = _ }
 
-    attributeChanged("Primary", "The information about the primary node",
-      primary, _primary) { primary = _ }
+    attributeChanged(
+      "Primary",
+      "The information about the primary node",
+      primary,
+      _primary
+    ) { primary = _ }
 
-    attributeChanged("Mongos", "The information about the mongos node",
-      mongos, _mongos) { mongos = _ }
+    attributeChanged(
+      "Mongos",
+      "The information about the mongos node",
+      mongos,
+      _mongos
+    ) { mongos = _ }
 
-    attributeChanged("Nearest", "The information about the nearest node",
-      nearest, _nearest) { nearest = _ }
+    attributeChanged(
+      "Nearest",
+      "The information about the nearest node",
+      nearest,
+      _nearest
+    ) { nearest = _ }
 
-    attributeChanged("Nodes", "The information about the node list",
-      nodes, _nodes) { nodes = _ }
+    attributeChanged(
+      "Nodes",
+      "The information about the node list",
+      nodes,
+      _nodes
+    ) { nodes = _ }
 
-    attributeChanged("Secondaries", "The information about the secondary nodes",
-      secondaries, _secondaries) { secondaries = _ }
+    attributeChanged(
+      "Secondaries",
+      "The information about the secondary nodes",
+      secondaries,
+      _secondaries
+    ) { secondaries = _ }
 
     attributeChanged[java.lang.Integer](
-      "AwaitingRequests", "The number of awaiting requests",
-      awaitingRequests, _awaitingRequests) { awaitingRequests = _ }
+      "AwaitingRequests",
+      "The number of awaiting requests",
+      awaitingRequests,
+      _awaitingRequests
+    ) { awaitingRequests = _ }
 
     attributeChanged[java.lang.Integer](
       "MaxAwaitingRequestsPerChannel",
       "The maximum number of awaiting requests per channel",
-      maxAwaitingRequestsPerChannel, _maxAwaitingRequestsPerChannel) {
-        maxAwaitingRequestsPerChannel = _
-      }
+      maxAwaitingRequestsPerChannel,
+      _maxAwaitingRequestsPerChannel
+    ) {
+      maxAwaitingRequestsPerChannel = _
+    }
   }
 }
 
 object NodeSet {
+
   lazy val notificationInfo: Array[MBeanNotificationInfo] = Array(
     new MBeanNotificationInfo(
       Array("stateChange"),
       classOf[Notification].getName,
-      "The state of the connection pool has changed"),
+      "The state of the connection pool has changed"
+    ),
     new MBeanNotificationInfo(
       Array("nodeAdded"),
       classOf[Notification].getName,
-      "A node has been added to the set"),
+      "A node has been added to the set"
+    ),
     new MBeanNotificationInfo(
       Array("nodeUpdated"),
       classOf[Notification].getName,
-      "A node has been updated to the set"),
+      "A node has been updated to the set"
+    ),
     new MBeanNotificationInfo(
       Array("nodeRemoved"),
       classOf[Notification].getName,
-      "A node has been removed to the set"),
+      "A node has been removed to the set"
+    ),
     new MBeanNotificationInfo(
       Array[String](AttributeChangeNotification.ATTRIBUTE_CHANGE),
       classOf[AttributeChangeNotification].getName,
-      "The node set has changed"))
+      "The node set has changed"
+    )
+  )
 }
 
 @SuppressWarnings(Array("NullAssignment"))
 final class Node private[jmx] (
-  supervisor: String,
-  connection: String) extends NotificationBroadcasterSupport
-  with NodeMBean with NotificationSupport {
+    supervisor: String,
+    connection: String)
+    extends NotificationBroadcasterSupport
+    with NodeMBean
+    with NotificationSupport {
 
   private var name = "unknown"
   private var aliases: String = null
@@ -401,45 +489,65 @@ final class Node private[jmx] (
 
     attributeChanged("Name", "The node name", name, _name) { name = _ }
 
-    attributeChanged("Aliases", "The aliases of the node",
-      aliases, _aliases) { aliases = _ }
+    attributeChanged("Aliases", "The aliases of the node", aliases, _aliases) {
+      aliases = _
+    }
 
-    attributeChanged("Host", "The name of the node host",
-      host, _host) { host = _ }
+    attributeChanged("Host", "The name of the node host", host, _host) {
+      host = _
+    }
 
-    attributeChanged("Port", "The MongoDB port on the node",
-      port, _port) { port = _ }
+    attributeChanged("Port", "The MongoDB port on the node", port, _port) {
+      port = _
+    }
 
-    attributeChanged("Status", "The node status",
-      status, _status) { status = _ }
+    attributeChanged("Status", "The node status", status, _status) {
+      status = _
+    }
 
-    attributeChanged("Connections", "The number of connections to the node",
-      connections, _connections) { connections = _ }
+    attributeChanged(
+      "Connections",
+      "The number of connections to the node",
+      connections,
+      _connections
+    ) { connections = _ }
 
     attributeChanged(
       "Connected",
       "The number of connections established to the node",
-      connected, _connected) { connected = _ }
+      connected,
+      _connected
+    ) { connected = _ }
 
     attributeChanged(
       "Authenticated",
       "The number of authenticated connections to the node",
-      authenticated, _authenticated) { authenticated = _ }
+      authenticated,
+      _authenticated
+    ) { authenticated = _ }
 
     attributeChanged("Tags", "The tags for the node", tags, _tags) { tags = _ }
 
     attributeChanged(
       "ProtocolMetadata",
       "The metadata for the protocol to connect to the node",
-      protocolMetadata, _protocolMetadata) { protocolMetadata = _ }
+      protocolMetadata,
+      _protocolMetadata
+    ) { protocolMetadata = _ }
 
     attributeChanged(
       "PingInfo",
       "The information about the ping to the node",
-      pingInfo, _pingInfo) { pingInfo = _ }
+      pingInfo,
+      _pingInfo
+    ) { pingInfo = _ }
 
-    attributeChanged("Mongos", "Indicates whether the node is a Mongos one",
-      mongos, _mongos) { mongos = _ }
+    attributeChanged(
+      "Mongos",
+      "Indicates whether the node is a Mongos one",
+      mongos,
+      _mongos
+    ) { mongos = _ }
 
   }
 
@@ -466,9 +574,12 @@ final class Node private[jmx] (
 }
 
 object Node {
+
   lazy val notificationInfo: Array[MBeanNotificationInfo] = Array(
     new MBeanNotificationInfo(
       Array[String](AttributeChangeNotification.ATTRIBUTE_CHANGE),
       classOf[AttributeChangeNotification].getName,
-      "The node has changed"))
+      "The node has changed"
+    )
+  )
 }

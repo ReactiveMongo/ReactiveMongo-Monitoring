@@ -35,7 +35,8 @@ final class StaticListenerBinder {
 
           Tuple2(
             s"reactivemongo-${System identityHashCode cause}",
-            new NoOpStatsDClient())
+            new NoOpStatsDClient()
+          )
         }
 
         case res => {
@@ -43,7 +44,8 @@ final class StaticListenerBinder {
 
           Tuple2(
             s"reactivemongo-${System identityHashCode res}",
-            new NoOpStatsDClient())
+            new NoOpStatsDClient()
+          )
         }
       }
 
@@ -52,17 +54,22 @@ final class StaticListenerBinder {
 
   // ---
 
-  private type BuilderChain = Seq[NonBlockingStatsDClientBuilder => Option[NonBlockingStatsDClientBuilder]]
+  private type BuilderChain = Seq[
+    NonBlockingStatsDClientBuilder => Option[NonBlockingStatsDClientBuilder]
+  ]
 
   private def buildWithOptions(
-    builder: NonBlockingStatsDClientBuilder,
-    config: Configuration): NonBlockingStatsDClient =
-    optionBuilders(config).foldLeft(builder) { (b1, makeOpt) =>
-      makeOpt(b1) match {
-        case Some(b2) => b2
-        case _ => b1
+      builder: NonBlockingStatsDClientBuilder,
+      config: Configuration
+    ): NonBlockingStatsDClient =
+    optionBuilders(config)
+      .foldLeft(builder) { (b1, makeOpt) =>
+        makeOpt(b1) match {
+          case Some(b2) => b2
+          case _        => b1
+        }
       }
-    }.build()
+      .build()
 
   private def optionBuilders(config: Configuration): BuilderChain =
     Seq(
@@ -75,8 +82,8 @@ final class StaticListenerBinder {
       b => config.timeout.map(b.timeout(_)),
       { b =>
         config.telemetry.map { t =>
-          b.telemetryHostname(t.hostname).
-            telemetryPort(t.port)
+          b.telemetryHostname(t.hostname).telemetryPort(t.port)
         }
-      })
+      }
+    )
 }

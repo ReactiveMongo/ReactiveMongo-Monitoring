@@ -16,38 +16,22 @@ object Common extends AutoPlugin {
     organization := "org.reactivemongo",
     autoAPIMappings := true,
     testFrameworks ~= { _.filterNot(_ == TestFrameworks.ScalaTest) },
-    scalacOptions ++= {
-      val v = scalaBinaryVersion.value
-
-      if (v == "2.12") {
+    Compile / doc / scalacOptions ++= {
+      if (scalaBinaryVersion.value == "3") {
         Seq(
-          "-Ywarn-numeric-widen",
-          "-Ywarn-dead-code",
-          "-Ywarn-value-discard",
-          "-Ywarn-infer-any",
-          "-Ywarn-unused",
-          "-Ywarn-unused-import",
-          "-Ywarn-macros:after"
-        )
-      } else if (v == "2.11") {
-        Seq("-Yopt:_", "-Ydead-code", "-Yclosure-elim", "-Yconst-opt")
-      } else if (v != "2.10") {
-        Seq("-Wmacros:after")
+          /*"-diagrams", */"-implicits", "-skip-by-id:highlightextractor")
       } else {
-        Seq.empty
+        Seq("-implicits", "-skip-packages", "highlightextractor")
       }
     },
-    scalacOptions in (Compile, doc) := (scalacOptions in Test).value ++ Seq(
-      "-unchecked", "-deprecation",
-      /*"-diagrams", */"-implicits", "-skip-packages", "highlightextractor") ++
-      Opts.doc.title(name.value),
+    Compile / doc / scalacOptions ++= Opts.doc.title(name.value),
     resolvers ++= Seq(
       Resolver.sonatypeRepo("staging"),
       Resolver.sonatypeRepo("snapshots"),
       Resolver.typesafeRepo("releases")),
     mimaFailOnNoPrevious := false,
-    closeableObject in Test := "Common$",
-    testOptions in Test += Tests.Cleanup(cleanup.value),
+    Test / closeableObject := "Common$",
+    Test / testOptions += Tests.Cleanup(cleanup.value),
     pomPostProcess := {
       val next: XmlElem => Option[XmlElem] = providedInternalDeps
 
@@ -61,7 +45,6 @@ object Common extends AutoPlugin {
 
       XmlUtil.transformPomDependencies(f)
     }
-
   )
 
   val cleanup = Def.task[ClassLoader => Unit] {
@@ -70,7 +53,7 @@ object Common extends AutoPlugin {
     {cl: ClassLoader =>
       import scala.language.reflectiveCalls
 
-      val objectClass = (closeableObject in Test).value
+      val objectClass = (Test / closeableObject).value
       val c = cl.loadClass(objectClass)
       type M = { def close(): Unit }
       val m: M = c.getField("MODULE$").get(null).asInstanceOf[M]

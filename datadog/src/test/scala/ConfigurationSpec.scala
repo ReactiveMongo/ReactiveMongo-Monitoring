@@ -3,15 +3,15 @@ package reactivemongo.datadog
 import com.typesafe.config.ConfigFactory
 
 final class ConfigurationSpec extends org.specs2.mutable.Specification {
-  "Configuration" title
+  "Configuration".title
 
   "Configuration" should {
     "not be loaded when missing" in {
-      val missingCfg = ConfigFactory.parseProperties(
-        new java.util.Properties())
+      val missingCfg = ConfigFactory.parseProperties(new java.util.Properties())
 
       Configuration(missingCfg) must beSuccessfulTry(
-        Option.empty[Configuration])
+        Option.empty[Configuration]
+      )
     }
 
     "be loaded" >> {
@@ -27,31 +27,38 @@ final class ConfigurationSpec extends org.specs2.mutable.Specification {
         }
 
         Configuration(minimalCfg) must beSuccessfulTry(
-          Some(new Configuration(
-            name = "minimal",
-            hostname = "localhost",
-            port = 8125,
-            prefix = "reactivemongo")))
+          Some(
+            new Configuration(
+              name = "minimal",
+              hostname = "localhost",
+              port = 8125,
+              prefix = "reactivemongo"
+            )
+          )
+        )
 
       }
 
       "from complete resource" in {
         Configuration.defaultConfiguration() must beSuccessfulTry(
-          Some(new Configuration(
-            name = "tests",
-            hostname = "localhost",
-            port = 8126,
-            prefix = "mytests",
-            constantTags = Seq("bar", "lorem"),
-            bufferPoolSize = Some(10),
-            entityID = Some("id"),
-            queueSize = Some(12),
-            senderWorkers = Some(13),
-            socketBufferSize = Some(14),
-            timeout = Some(2000),
-            telemetry = Some(new TelemetrySettings(
+          Some(
+            new Configuration(
+              name = "tests",
               hostname = "localhost",
-              port = 1234)))))
+              port = 8126,
+              prefix = "mytests",
+              constantTags = Seq("bar", "lorem"),
+              bufferPoolSize = Some(10),
+              entityID = Some("id"),
+              queueSize = Some(12),
+              senderWorkers = Some(13),
+              socketBufferSize = Some(14),
+              timeout = Some(2000),
+              telemetry =
+                Some(new TelemetrySettings(hostname = "localhost", port = 1234))
+            )
+          )
+        )
 
       }
     }

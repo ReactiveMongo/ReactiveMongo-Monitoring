@@ -6,9 +6,10 @@ object Dependencies {
 
   val specsDeps = Seq(
     "org.specs2" %% "specs2-core" % specsVer,
-    "org.specs2" %% "specs2-junit" % specsVer)
+    "org.specs2" %% "specs2-junit" % specsVer).
+    map(_ cross CrossVersion.for3Use2_13)
 
-  val slf4jVer = "1.7.30"
+  val slf4jVer = "1.7.32"
 
   val slf4jDeps = Seq(
     "org.slf4j" % "slf4j-api" % slf4jVer % Provided,
