@@ -4,20 +4,18 @@ resolvers ++= Seq(
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
 
-addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.3")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
 
-addSbtPlugin("cchantep" % "sbt-scaladoc-compiler" % "0.1")
+addSbtPlugin("cchantep" % "sbt-scaladoc-compiler" % "0.3")
 
-addSbtPlugin("cchantep" % "sbt-hl-compiler" % "0.7")
+addSbtPlugin("cchantep" % "sbt-hl-compiler" % "0.8")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.10.0-RC1")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.1")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.8.1")
 
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.12")
-
-addSbtPlugin("com.sksamuel.scapegoat" %% "sbt-scapegoat" % "1.1.0")
+addSbtPlugin("com.github.sbt" % "sbt-release" % "1.1.0")
 
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
 
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.25")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.33")

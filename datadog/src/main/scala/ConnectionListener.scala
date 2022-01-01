@@ -11,26 +11,29 @@ import reactivemongo.core.nodeset.NodeSetInfo
 
 /** Listener definition for the connection events. */
 final class ConnectionListener(hostname: String, client: StatsDClient)
-  extends external.reactivemongo.ConnectionListener {
+    extends external.reactivemongo.ConnectionListener {
 
   def poolCreated(
-    options: MongoConnectionOptions,
-    supervisor: String,
-    connection: String): Unit = {
+      options: MongoConnectionOptions,
+      supervisor: String,
+      connection: String
+    ): Unit = {
 
-    val event = Event.builder().
-      withHostname(hostname).
-      withAggregationKey(supervisor).
-      withSourceTypeName("reactivemongo").
-      withAlertType(Event.AlertType.INFO).
-      withDate(System.currentTimeMillis()).
-      withTitle("reactivemongo.pool-created").
-      withText(options.toString)
+    val event = Event
+      .builder()
+      .withHostname(hostname)
+      .withAggregationKey(supervisor)
+      .withSourceTypeName("reactivemongo")
+      .withAlertType(Event.AlertType.INFO)
+      .withDate(System.currentTimeMillis())
+      .withTitle("reactivemongo.pool-created")
+      .withText(options.toString)
 
     client.recordEvent(
       event.build(),
       s"supervisior:${supervisor}",
-      s"connection:${supervisor}.${connection}")
+      s"connection:${supervisor}.${connection}"
+    )
   }
 
   private val poolTags = MMap.empty[(String, String), Set[String]]
@@ -39,10 +42,11 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
 
   @com.github.ghik.silencer.silent("NodeSetInfo")
   def nodeSetUpdated(
-    supervisor: String,
-    connection: String,
-    previous: NodeSetInfo,
-    updated: NodeSetInfo): Unit = {
+      supervisor: String,
+      connection: String,
+      previous: NodeSetInfo,
+      updated: NodeSetInfo
+    ): Unit = {
 
     val conPrefix = s"${supervisor}.${connection}"
     val prefix = updated.name.foldLeft(conPrefix) { (p, n) => s"$p.$n" }
@@ -51,7 +55,8 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
     val tagSet = Set(
       s"supervisor:${supervisor}",
       s"connection:${conPrefix}",
-      s"nodeset:${prefix}")
+      s"nodeset:${prefix}"
+    )
 
     poolTags.synchronized {
       poolTags.put(key, tagSet)
@@ -64,13 +69,12 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
     val gauge = client.gauge(_: String, _: Long, tags: _*)
 
     // Node set gauges
-    gauge(
-      "awaitingRequests",
-      updated.awaitingRequests.fold(0L)(_.toLong))
+    gauge("awaitingRequests", updated.awaitingRequests.fold(0L)(_.toLong))
 
     gauge(
       "maxAwaitingRequestsPerChannel",
-      updated.maxAwaitingRequestsPerChannel.fold(0L)(_.toLong))
+      updated.maxAwaitingRequestsPerChannel.fold(0L)(_.toLong)
+    )
 
     gauge("numberOfNodes", updated.nodes.size.toLong)
 
@@ -135,55 +139,51 @@ final class ConnectionListener(hostname: String, client: StatsDClient)
       g("pingTime")
     }
 
-    val event = Event.builder().
-      withHostname(hostname).
-      withAggregationKey(supervisor).
-      withSourceTypeName("reactivemongo").
-      withAlertType(Event.AlertType.INFO).
-      withDate(System.currentTimeMillis()).
-      withTitle("pool-stopped").
-      withText(ns mkString ", ")
+    val event = Event
+      .builder()
+      .withHostname(hostname)
+      .withAggregationKey(supervisor)
+      .withSourceTypeName("reactivemongo")
+      .withAlertType(Event.AlertType.INFO)
+      .withDate(System.currentTimeMillis())
+      .withTitle("pool-stopped")
+      .withText(ns mkString ", ")
 
     client.recordEvent(
       event.build(),
       s"supervisor:${supervisor}",
-      s"connection:${supervisor}.${connection}")
+      s"connection:${supervisor}.${connection}"
+    )
 
     ()
   }
 
   @com.github.ghik.silencer.silent("NodeSetInfo")
   private def traceUpdate(
-    supervisor: String,
-    baseTags: Seq[String],
-    updated: NodeSetInfo): Unit = {
+      supervisor: String,
+      baseTags: Seq[String],
+      updated: NodeSetInfo
+    ): Unit = {
 
-    val event = Event.builder().
-      withHostname(hostname).
-      withAggregationKey(supervisor).
-      withSourceTypeName("reactivemongo").
-      withAlertType(Event.AlertType.INFO).
-      withDate(System.currentTimeMillis()).
-      withTitle("pool-updated").
-      withText(updated.toString)
+    val event = Event
+      .builder()
+      .withHostname(hostname)
+      .withAggregationKey(supervisor)
+      .withSourceTypeName("reactivemongo")
+      .withAlertType(Event.AlertType.INFO)
+      .withDate(System.currentTimeMillis())
+      .withTitle("pool-updated")
+      .withText(updated.toString)
 
     val tags = Seq.newBuilder[String] ++= baseTags
 
-    updated.version.foreach { v =>
-      tags += s"version:$v"
-    }
+    updated.version.foreach { v => tags += s"version:$v" }
 
-    updated.primary.foreach { node =>
-      tags += s"primary:${node.name}"
-    }
+    updated.primary.foreach { node => tags += s"primary:${node.name}" }
 
-    updated.mongos.foreach { node =>
-      tags += s"mongos:${node.name}"
-    }
+    updated.mongos.foreach { node => tags += s"mongos:${node.name}" }
 
-    updated.nearest.foreach { node =>
-      tags += s"nearest:${node.name}"
-    }
+    updated.nearest.foreach { node => tags += s"nearest:${node.name}" }
 
     client.recordEvent(event.build, tags.result(): _*)
   }

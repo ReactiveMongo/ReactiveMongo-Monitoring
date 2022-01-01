@@ -1,11 +1,11 @@
 import external.reactivemongo.ConnectionListener
 
 final class DatadogSpec extends org.specs2.mutable.Specification {
-  "Datadog" title
+  "Datadog".title
 
   sequential
 
-  //import Common.db
+  // import Common.db
 
   "Connection listener" should {
     lazy val listener = ConnectionListener()
