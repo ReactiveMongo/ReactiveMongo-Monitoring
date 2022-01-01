@@ -36,5 +36,3 @@ ThisBuild / version := {
       sys.error("Fails to resolve Git information")
   }
 }
-
-ThisBuild / version := "1.1.0-RC2"

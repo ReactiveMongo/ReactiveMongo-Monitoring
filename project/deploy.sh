@@ -42,10 +42,12 @@ EOF
 }
 
 SCALA_MODULES="jmx:reactivemongo-jmx kamon:reactivemongo-kamon datadog:reactivemongo-datadog"
-SCALA_VERSIONS="2.11 2.12 2.13"
+SCALA_VERSIONS="2.11 2.12 2.13 3.1.2-RC1-bin-20211222-c94b333-NIGHTLY"
 BASES=""
 
 for V in $SCALA_VERSIONS; do
+    MV=`echo "$V" | sed -e 's/^3.*/3/'`
+
     for M in $SCALA_MODULES; do
         B=`echo "$M" | cut -d ':' -f 1`
         SCALA_DIR="$B/target/scala-$V"
@@ -54,7 +56,7 @@ for V in $SCALA_VERSIONS; do
             echo "Skip Scala version $V for $M"
         else
             N=`echo "$M" | cut -d ':' -f 2`
-            BASES="$BASES $SCALA_DIR/$N"_$V-$VERSION
+            BASES="$BASES $SCALA_DIR/$N"_$MV-$VERSION
         fi
     done
 done
