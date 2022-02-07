@@ -42,7 +42,7 @@ EOF
 }
 
 SCALA_MODULES="jmx:reactivemongo-jmx kamon:reactivemongo-kamon datadog:reactivemongo-datadog"
-SCALA_VERSIONS="2.11 2.12 2.13 3.1.2-RC1-bin-20211222-c94b333-NIGHTLY"
+SCALA_VERSIONS="2.11 2.12 2.13 3.1.2-RC1"
 BASES=""
 
 for V in $SCALA_VERSIONS; do

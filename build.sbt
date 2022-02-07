@@ -15,7 +15,7 @@ ThisBuild / resolvers ++= Seq(
 mimaFailOnNoPrevious := false
 
 ThisBuild / libraryDependencies ++= (
-  reactiveMongo.value +: (slf4jDeps ++ specsDeps))
+  reactiveMongo.value +: (slf4jDeps ++ specsDeps.map(_ % Test)))
 
 lazy val jmx = (project in file("jmx")).settings(
   name := s"${baseName}-jmx",
