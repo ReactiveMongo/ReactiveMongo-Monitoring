@@ -26,8 +26,8 @@ object Common extends AutoPlugin {
     },
     Compile / doc / scalacOptions ++= Opts.doc.title(name.value),
     resolvers ++= Seq(
-      Resolver.sonatypeRepo("staging"),
-      Resolver.sonatypeRepo("snapshots"),
+      Resolver.sonatypeOssRepos("staging"),
+      Resolver.sonatypeOssRepos("snapshots"),
       Resolver.typesafeRepo("releases")),
     mimaFailOnNoPrevious := false,
     Test / closeableObject := "Common$",
