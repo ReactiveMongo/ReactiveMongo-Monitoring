@@ -8,10 +8,6 @@ val baseName = "reactivemongo"
 
 name := s"${baseName}-monitoring"
 
-ThisBuild / resolvers ++= Seq(
-  Resolver.sonatypeOssRepos("snapshots"),
-  "Typesafe repository releases" at "https://repo.typesafe.com/typesafe/releases/")
-
 mimaFailOnNoPrevious := false
 
 ThisBuild / libraryDependencies ++= (

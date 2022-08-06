@@ -25,10 +25,8 @@ object Common extends AutoPlugin {
       }
     },
     Compile / doc / scalacOptions ++= Opts.doc.title(name.value),
-    resolvers ++= Seq(
-      Resolver.sonatypeOssRepos("staging"),
-      Resolver.sonatypeOssRepos("snapshots"),
-      Resolver.typesafeRepo("releases")),
+    resolvers ++= Resolver.sonatypeOssRepos("staging") ++ Resolver.
+      sonatypeOssRepos("snapshots") :+ Resolver.typesafeRepo("releases"),
     mimaFailOnNoPrevious := false,
     Test / closeableObject := "Common$",
     Test / testOptions += Tests.Cleanup(cleanup.value),
@@ -44,6 +42,18 @@ object Common extends AutoPlugin {
       }
 
       XmlUtil.transformPomDependencies(f)
+    },
+    // Mock silencer for Scala3
+    Test / doc / scalacOptions ++= List("-skip-packages", "com.github.ghik"),
+    Compile / packageBin / mappings ~= {
+      _.filter {
+        case (_, path) => !path.startsWith("com/github/ghik")
+      }
+    },
+    Compile / packageSrc / mappings ~= {
+      _.filter {
+        case (_, path) => path != "silent.scala"
+      }
     }
   )
 

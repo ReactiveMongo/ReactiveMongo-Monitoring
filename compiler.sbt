@@ -103,11 +103,3 @@ ThisBuild / libraryDependencies ++= {
     )
   } else Seq.empty
 }
-
-/* TODO: Remove
-ThisBuild / scalacOptions ++= {
-  if (scalaBinaryVersion.value startsWith "2.") {
-    Seq("-P:silencer:globalFilters=.*value\\ macro.*\\ is never used;class\\ Response\\ in\\ package\\ protocol\\ is\\ deprecated;pattern\\ var\\ macro.*\\ is\\ never\\ used")
-  } else Seq.empty
-}
- */
