@@ -90,9 +90,7 @@ final class Configuration private[datadog] (
   )
 }
 
-@com.github.ghik.silencer.silent("JavaConverters")
 object Configuration {
-  import scala.collection.JavaConverters._
   import scala.util.Try
   import scala.util.control.NonFatal
   import com.typesafe.config.{ Config, ConfigException, ConfigFactory }
@@ -143,14 +141,24 @@ object Configuration {
     }
 
     Try(str("hostname")).map(_.map { hostname =>
+      val tags = opt {
+        val buf = Seq.newBuilder[String]
+
+        val it = cfg.getStringList("constantTags").iterator()
+
+        while (it.hasNext) {
+          buf += it.next()
+        }
+
+        buf.result()
+      }
+
       new Configuration(
         name = name,
         hostname = hostname,
         port = cfg.getInt("port"),
         prefix = str("prefix").getOrElse(DEFAULT_PREFIX),
-        constantTags = opt(
-          cfg.getStringList("constantTags").asScala ++: Seq.empty
-        ).getOrElse(Seq.empty),
+        constantTags = tags.getOrElse(Seq.empty),
         bufferPoolSize = int("bufferPoolSize"),
         entityID = str("entityID"),
         queueSize = int("queueSize"),

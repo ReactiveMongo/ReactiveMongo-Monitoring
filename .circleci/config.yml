@@ -6,7 +6,7 @@ commands:
     parameters:
       sbt_version:
         type: string
-        default: "1.7.1"
+        default: "1.8.2"
     steps:
       - restore_cache:
           keys:
@@ -175,17 +175,17 @@ workflows:
 
       - build_n_test:
           name: jdk8_scala212
-          scala_version: 2.12.16
+          scala_version: 2.12.17
           openjdk_version: 8
 
       - build_n_test:
           name: jdk10_scala213
-          scala_version: 2.13.8
+          scala_version: 2.13.10
           openjdk_version: 10
 
       - build_n_test:
           name: jdk11_scala31
-          scala_version: 3.1.3
+          scala_version: 3.2.1
           openjdk_version: 11
 
       - publish_snapshots:
