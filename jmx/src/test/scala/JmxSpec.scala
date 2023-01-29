@@ -45,75 +45,84 @@ final class JmxSpec(implicit ee: ExecutionEnv)
   }
 
   "NodeSet MBean" should {
-    "be registered" in {
-      Try(db).map(_.name) must beSuccessfulTry[String].like {
-        case name =>
-          name aka "database name" must_== Common.dbName and {
-            val mbeans = mbs.queryMBeans(
-              new ObjectName("org.reactivemongo.Supervisor-*:type=NodeSet,*"),
-              null
-            )
+    "be registered" >> {
+      var on: ObjectName = null
 
-            val l = 5 + Common.primaryHost.size // Node[...
+      "with expected name" in {
+        Try(db).map(_.name) must beSuccessfulTry[String].like {
+          case name =>
+            name aka "database name" must_== Common.dbName and {
+              val mbeans = mbs.queryMBeans(
+                new ObjectName("org.reactivemongo.Supervisor-*:type=NodeSet,*"),
+                null
+              )
 
-            Try(mbeans.iterator.next()) must beSuccessfulTry[
-              ObjectInstance
-            ].which { bi =>
-              val on = bi.getObjectName
+              Try(mbeans.iterator.next()) must beSuccessfulTry[
+                ObjectInstance
+              ].which { bi =>
+                on = bi.getObjectName
 
-              verifyBeanInstance(
-                bi,
-                "reactivemongo.jmx.NodeSet",
-                nodeSetAttrs,
-                NodeSet.notificationInfo
-              ) and {
-                val attrs = Promise[List[Any]]()
-                val listener = new NotificationListener {
-                  def handleNotification(n: Notification, b: Object): Unit = {
-                    Try(mbs.getAttribute(on, "Nearest")).toOption
-                      .filter(_ => !attrs.isCompleted)
-                      .foreach { _ =>
-                        Try(nodeSetAttrs.map {
-                          case (name, typ, _, _) =>
-                            val v = mbs.getAttribute(on, name)
-
-                            if (
-                              typ == "java.lang.String" && (v != null && v.toString
-                                .startsWith("Node["))
-                            ) {
-
-                              v.asInstanceOf[String].take(l)
-                            } else v
-                        }) match {
-                          case Success(_ :: _ :: _ :: _ :: null :: _) => ()
-                          case res =>
-                            attrs.tryComplete(res)
-                        }
-                      }
-                  }
-                }
-
-                mbs.addNotificationListener(on, listener, null, null)
-
-                attrs.future must beEqualTo(
-                  List(
-                    { // set name
-                      if (Common.replSetOn) "testrs0"
-                      else null.asInstanceOf[String]
-                    }, { // set version
-                      if (Common.replSetOn) 1L
-                      else -1L
-                    },
-                    s"Node[$host:$port", // primary
-                    null.asInstanceOf[String], // mongos
-                    s"Node[$host:$port", // nearest
-                    s"Node[$host:$port", // nodes
-                    "" // secondaries
-                  )
-                ).await(0, 5.seconds)
+                verifyBeanInstance(
+                  bi,
+                  "reactivemongo.jmx.NodeSet",
+                  nodeSetAttrs,
+                  NodeSet.notificationInfo
+                )
               }
             }
+        }
+      }
+
+      "and be listened" in {
+        val l = 5 + Common.primaryHost.size // Node[...
+
+        val attrs = Promise[List[Any]]()
+        val listener = new NotificationListener {
+          def handleNotification(n: Notification, b: Object): Unit = {
+            Try(mbs.getAttribute(on, "Nearest")).toOption
+              .filter(_ => !attrs.isCompleted)
+              .foreach { _ =>
+                Try(nodeSetAttrs.map {
+                  case (name, typ, _, _) =>
+                    val v = mbs.getAttribute(on, name)
+
+                    if (
+                      typ == "java.lang.String" && (v != null && v.toString
+                        .startsWith("Node["))
+                    ) {
+
+                      v.asInstanceOf[String].take(l)
+                    } else v
+                }) match {
+                  case Success(_ :: _ :: _ :: _ :: null :: _) => ()
+                  case res =>
+                    attrs.tryComplete(res)
+                }
+              }
           }
+        }
+
+        mbs.addNotificationListener(on, listener, null, null)
+
+        attrs.future.map(_.map {
+          case null => null.asInstanceOf[String]
+          case v    => v.toString
+        }) must beEqualTo[List[String]](
+          List(
+            { // set name
+              if (Common.replSetOn) "testrs0"
+              else null.asInstanceOf[String]
+            }, { // set version
+              if (Common.replSetOn) 1L
+              else -1L
+            }.toString,
+            s"Node[$host:$port", // primary
+            null.asInstanceOf[String], // mongos
+            s"Node[$host:$port", // nearest
+            s"Node[$host:$port", // nodes
+            "" // secondaries
+          )
+        ).await(0, 5.seconds)
       }
     }
   }
@@ -187,19 +196,26 @@ final class JmxSpec(implicit ee: ExecutionEnv)
           .aka("connection fragment") must beSome(
           tests.name(Common.connection)
         ) and {
-          bi.getClassName must_== beanType
+          bi.getClassName must_=== beanType
         } and {
           Try(mbs getMBeanInfo bi.getObjectName)
             .aka("MBean info") must beSuccessfulTry[MBeanInfo].like {
             case info =>
-              info.getAttributes
-                .map(attr => {
-                  (attr.getName, attr.getType, attr.isReadable, attr.isWritable)
-                })
-                .toSeq must containAllOf(attrs) and {
-                info.getOperations aka "operations" must beEmpty
+              {
+                info.getAttributes
+                  .map(attr => {
+                    (
+                      attr.getName,
+                      attr.getType,
+                      attr.isReadable,
+                      attr.isWritable
+                    )
+                  })
+                  .toSeq must containAllOf(attrs)
               } and {
-                info.getNotifications must_== notifInfo
+                info.getNotifications.toSeq must_=== notifInfo.toSeq
+              } and {
+                info.getOperations.toSeq aka "operations" must beEmpty
               }
           }
         }
