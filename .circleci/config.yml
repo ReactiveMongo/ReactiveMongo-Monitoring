@@ -185,7 +185,7 @@ workflows:
 
       - build_n_test:
           name: jdk11_scala31
-          scala_version: 3.2.1
+          scala_version: 3.2.2
           openjdk_version: 11
 
       - publish_snapshots:
