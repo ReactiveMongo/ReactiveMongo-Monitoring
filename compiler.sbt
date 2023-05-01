@@ -25,7 +25,7 @@ ThisBuild / scalacOptions ++= {
       "-Xlint",
       "-g:vars"
     )
-  } else Seq()
+  } else Seq.empty
 }
 
 ThisBuild / scalacOptions ++= {
