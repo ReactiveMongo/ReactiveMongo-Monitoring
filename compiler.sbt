@@ -1,10 +1,10 @@
-ThisBuild / scalaVersion := "2.12.17"
+ThisBuild / scalaVersion := "2.12.19"
 
 ThisBuild / crossScalaVersions := Seq(
   "2.11.12",
   scalaVersion.value,
-  "2.13.10",
-  "3.2.2"
+  "2.13.14",
+  "3.4.2"
 )
 
 crossVersion := CrossVersion.binary
@@ -19,13 +19,23 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 ThisBuild / scalacOptions ++= {
-  if (scalaBinaryVersion.value startsWith "2.") {
+  val v = scalaBinaryVersion.value
+
+  if (v == "2.13") {
+    Seq(
+      "-release", "8",
+      "-Xlint",
+      "-g:vars"
+    )
+  } else if (v startsWith "2.") {
     Seq(
       "-target:jvm-1.8",
       "-Xlint",
       "-g:vars"
     )
-  } else Seq.empty
+  } else {
+    Seq("-release", "8")
+  }
 }
 
 ThisBuild / scalacOptions ++= {
@@ -64,7 +74,13 @@ ThisBuild / scalacOptions ++= {
       "-Wunused"
     )
   } else {
-    Seq("-Wunused:all", "-language:implicitConversions")
+    Seq(
+      "-Wunused:all",
+      "-language:implicitConversions",
+      "-Wconf:msg=.*is\\ not\\ declared\\ infix.*:s",
+      "-Wconf:msg=.*function.*\\ _.*no\\ longer\\ supported.*:s",
+      "-Wconf:msg=.*is\\ no\\ longer\\ supported\\ for\\ vararg\\ splices.*:s"
+    )
   }
 }
 
@@ -91,7 +107,7 @@ Test / console / scalacOptions ~= filteredScalacOpts
 // Silencer
 ThisBuild / libraryDependencies ++= {
   if (!scalaBinaryVersion.value.startsWith("3")) {
-    val silencerVersion = "1.7.12"
+    val silencerVersion = "1.7.17"
 
     Seq(
       compilerPlugin(
