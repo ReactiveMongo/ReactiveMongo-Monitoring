@@ -6,7 +6,7 @@ commands:
     parameters:
       sbt_version:
         type: string
-        default: "1.9.2"
+        default: "1.10.1"
     steps:
       - restore_cache:
           keys:
@@ -169,23 +169,18 @@ workflows:
   main_suite:
     jobs:
       - build_n_test:
-          name: jdk11_scala211
-          scala_version: 2.11.12
-          openjdk_version: 11
-
-      - build_n_test:
           name: jdk8_scala212
-          scala_version: 2.12.17
+          scala_version: 2.12.19
           openjdk_version: 8
 
       - build_n_test:
           name: jdk10_scala213
-          scala_version: 2.13.10
+          scala_version: 2.13.14
           openjdk_version: 10
 
       - build_n_test:
-          name: jdk11_scala31
-          scala_version: 3.2.2
+          name: jdk11_scala3
+          scala_version: 3.4.2
           openjdk_version: 11
 
       - publish_snapshots:
@@ -194,7 +189,6 @@ workflows:
               only:
                 - master
           requires:
-            - jdk11_scala211
             - jdk8_scala212
             - jdk10_scala213
-            - jdk11_scala31
+            - jdk11_scala3

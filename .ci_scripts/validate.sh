@@ -9,10 +9,10 @@ cd "$SCRIPT_DIR/.."
 sbt ++$SCALA_VERSION ';scalafixAll -check ;scalafmtAll'
 
 git diff --exit-code || (
-  echo "ERROR: Scalafmt check failed, see differences above."
-  echo "To fix, format your sources using ./build scalafmtAll before submitting a pull request."
-  echo "Additionally, please squash your commits (eg, use git commit --amend) if you're going to update this pull request."
-  false
+    echo "ERROR: Scalafmt check failed, see differences above."
+    echo "To fix, format your sources using ./build scalafmtAll before submitting a pull request."
+    echo "Additionally, please squash your commits (eg, use git commit --amend) if you're going to update this pull request."
+    false
 )
 
 source "$SCRIPT_DIR/jvmopts.sh"
@@ -33,7 +33,7 @@ MONGOSHELL_OPTS="$MONGOSHELL_OPTS --eval"
 MONGODB_NAME=`mongo $MONGOSHELL_OPTS 'db.getName()' 2>/dev/null | tail -n 1`
 
 if [ ! "x$MONGODB_NAME" = "xFOO" ]; then
-    echo -n "\nERROR: Fails to connect using the MongoShell\n"
+    echo "ERROR: Fails to connect using the MongoShell"
     mongo $MONGOSHELL_OPTS 'db.getName()'
     tail -n 100 /tmp/mongod.log
     exit 2

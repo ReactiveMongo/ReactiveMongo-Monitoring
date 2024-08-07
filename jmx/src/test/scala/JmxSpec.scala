@@ -151,8 +151,8 @@ final class JmxSpec(implicit ee: ExecutionEnv)
                   )
 
                   Try(nodeAttrs.collect {
-                    case (name, _, _, _) if (!exAttr.contains(name)) =>
-                      mbs.getAttribute(on, name) match {
+                    case (nme, _, _, _) if (!exAttr.contains(nme)) =>
+                      mbs.getAttribute(on, nme) match {
                         case null => null.asInstanceOf[String]
                         case v    => v.toString
                       }
