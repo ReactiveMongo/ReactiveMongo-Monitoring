@@ -20,10 +20,10 @@ import reactivemongo.tests
 import external.reactivemongo.ConnectionListener
 
 import org.specs2.concurrent.ExecutionEnv
-import org.specs2.matcher.MatchResult
 
 final class JmxSpec(implicit ee: ExecutionEnv)
-    extends org.specs2.mutable.Specification {
+    extends org.specs2.mutable.Specification
+    with JmxSpecCompat {
 
   "JMX".title
 
@@ -51,7 +51,7 @@ final class JmxSpec(implicit ee: ExecutionEnv)
       "with expected name" in {
         Try(db).map(_.name) must beSuccessfulTry[String].like {
           case name =>
-            name aka "database name" must_== Common.dbName and {
+            name aka "database name" must equalTo(Common.dbName) and {
               val mbeans = mbs.queryMBeans(
                 new ObjectName("org.reactivemongo.Supervisor-*:type=NodeSet,*"),
                 null
@@ -131,7 +131,7 @@ final class JmxSpec(implicit ee: ExecutionEnv)
     "be registered" in {
       Try(db).map(_.name) must beSuccessfulTry[String].like {
         case name =>
-          name aka "database name" must_== Common.dbName and {
+          name aka "database name" must equalTo(Common.dbName) and {
             nodeMBean aka ("Node MBean") must beLike[ObjectInstance] {
               case bi =>
                 verifyBeanInstance(
@@ -158,15 +158,17 @@ final class JmxSpec(implicit ee: ExecutionEnv)
                       }
                   }) must beSuccessfulTry[List[String]].like {
                     case ls =>
-                      ls must_=== List(
-                        tests.name(Common.connection),
-                        s"$host:$port", // name
-                        "", // aliases
-                        host,
-                        port.toString,
-                        "{}", // tags
-                        "minWireVersion = 3.0, maxWireVersion = 3.0, maxMessageSizeBytes = 48000000, maxBsonSize = 16777216, maxBulkSize = 1000", // protocol metadata
-                        "false" // mongos
+                      ls must ===(
+                        List(
+                          tests.name(Common.connection),
+                          s"$host:$port", // name
+                          "", // aliases
+                          host,
+                          port.toString,
+                          "{}", // tags
+                          "minWireVersion = 3.0, maxWireVersion = 3.0, maxMessageSizeBytes = 48000000, maxBsonSize = 16777216, maxBulkSize = 1000", // protocol metadata
+                          "false" // mongos
+                        )
                       )
                   }
                 }
@@ -176,50 +178,49 @@ final class JmxSpec(implicit ee: ExecutionEnv)
     }
   }
 
-  def verifyBeanInstance(
+  protected def checkBeanInstance(
       instance: => ObjectInstance,
       beanType: String,
       attrs: List[AttrDef],
       notifInfo: Array[MBeanNotificationInfo]
-    ): MatchResult[Option[ObjectInstance]] =
-    Option(instance) must beSome[ObjectInstance].like {
-      case bi =>
-        Option(bi.getObjectName)
-          .flatMap(
-            _.toString
-              .drop(18)
-              .takeWhile(_ != ':')
-              .split("\\.")
-              .reverse
-              .headOption
-          )
-          .aka("connection fragment") must beSome(
-          tests.name(Common.connection)
-        ) and {
-          bi.getClassName must_=== beanType
-        } and {
-          Try(mbs getMBeanInfo bi.getObjectName)
-            .aka("MBean info") must beSuccessfulTry[MBeanInfo].like {
-            case info =>
-              {
-                info.getAttributes
-                  .map(attr => {
-                    (
-                      attr.getName,
-                      attr.getType,
-                      attr.isReadable,
-                      attr.isWritable
-                    )
-                  })
-                  .toSeq must containAllOf(attrs)
-              } and {
-                info.getNotifications.toSeq must_=== notifInfo.toSeq
-              } and {
-                info.getOperations.toSeq aka "operations" must beEmpty
-              }
-          }
+    ) = Option(instance) must beSome[ObjectInstance].like {
+    case bi =>
+      Option(bi.getObjectName)
+        .flatMap(
+          _.toString
+            .drop(18)
+            .takeWhile(_ != ':')
+            .split("\\.")
+            .reverse
+            .headOption
+        )
+        .aka("connection fragment") must beSome(
+        tests.name(Common.connection)
+      ) and {
+        bi.getClassName must ===(beanType)
+      } and {
+        Try(mbs getMBeanInfo bi.getObjectName)
+          .aka("MBean info") must beSuccessfulTry[MBeanInfo].like {
+          case info =>
+            {
+              info.getAttributes
+                .map(attr => {
+                  (
+                    attr.getName,
+                    attr.getType,
+                    attr.isReadable,
+                    attr.isWritable
+                  )
+                })
+                .toSeq must containAllOf(attrs)
+            } and {
+              info.getNotifications.toSeq must ===(notifInfo.toSeq)
+            } and {
+              info.getOperations.toSeq aka "operations" must beEmpty
+            }
         }
-    }
+      }
+  }
 
   def nodeMBean: Future[ObjectInstance] = {
     val mbeans = mbs.queryMBeans(
