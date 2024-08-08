@@ -10,8 +10,8 @@ name := s"${baseName}-monitoring"
 
 mimaFailOnNoPrevious := false
 
-ThisBuild / libraryDependencies ++= (
-  reactiveMongo.value +: (slf4jDeps ++ specsDeps.map(_ % Test)))
+ThisBuild / libraryDependencies ++= (reactiveMongo.value +: (slf4jDeps ++ specsDeps.value
+  .map(_ % Test)))
 
 lazy val jmx = (project in file("jmx")).settings(
   name := s"${baseName}-jmx",
@@ -28,9 +28,7 @@ lazy val jmx = (project in file("jmx")).settings(
 lazy val kamon = (project in file("kamon")).settings(
   name := s"${baseName}-kamon",
   description := "ReactiveMongo Kamon",
-  libraryDependencies += (
-    "io.kamon" %% "kamon-core" % "2.0.4").cross(
-    CrossVersion.for3Use2_13) % Provided
+  libraryDependencies += "io.kamon" %% "kamon-core" % "2.7.3" % Provided
 )
 
 lazy val datadog = (project in file("datadog")).settings(
@@ -38,11 +36,14 @@ lazy val datadog = (project in file("datadog")).settings(
   description := "ReactiveMongo Datadog",
   libraryDependencies ++= Seq(
     "com.typesafe" % "config" % "1.4.1",
-    "com.datadoghq" % "java-dogstatsd-client" % "2.10.3")
+    "com.datadoghq" % "java-dogstatsd-client" % "2.10.3"
+  )
 )
 
-lazy val root = (project in file(".")).settings(
-  publish := ({}),
-  publishTo := None,
-  Test / testOptions := Seq.empty
-).aggregate(jmx, kamon, datadog)
+lazy val root = (project in file("."))
+  .settings(
+    publish := ({}),
+    publishTo := None,
+    Test / testOptions := Seq.empty
+  )
+  .aggregate(jmx, kamon, datadog)

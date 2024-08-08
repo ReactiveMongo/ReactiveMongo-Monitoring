@@ -18,15 +18,14 @@ object Common extends AutoPlugin {
     testFrameworks ~= { _.filterNot(_ == TestFrameworks.ScalaTest) },
     Compile / doc / scalacOptions ++= {
       if (scalaBinaryVersion.value == "3") {
-        Seq(
-          /*"-diagrams", */"-implicits", "-skip-by-id:highlightextractor")
+        Seq( /*"-diagrams", */ "-implicits", "-skip-by-id:highlightextractor")
       } else {
         Seq("-implicits", "-skip-packages", "highlightextractor")
       }
     },
     Compile / doc / scalacOptions ++= Opts.doc.title(name.value),
-    resolvers ++= Resolver.sonatypeOssRepos("staging") ++ Resolver.
-      sonatypeOssRepos("snapshots") :+ Resolver.typesafeRepo("releases"),
+    resolvers ++= Resolver.sonatypeOssRepos("staging") ++ Resolver
+      .sonatypeOssRepos("snapshots") :+ Resolver.typesafeRepo("releases"),
     mimaFailOnNoPrevious := false,
     Test / closeableObject := "Common$",
     Test / testOptions += Tests.Cleanup(cleanup.value),
@@ -43,24 +42,36 @@ object Common extends AutoPlugin {
 
       XmlUtil.transformPomDependencies(f)
     },
+    Test / scalacOptions ++= {
+      val v = scalaBinaryVersion.value
+      if (v == "2.13") {
+        Seq(
+          "-Wconf:src=.*test/.*&msg=.*type\\ was\\ inferred.*(Any|Object).*:s",
+          "-Wconf:msg=.*infix\\ operator.*:s"
+        )
+      } else if (v startsWith "3.") {
+        Seq(
+          "-Wconf:msg=.*type\\ was\\ inferred.*(Any|Object).*:s",
+          "-Wconf:msg=.*infix\\ operator.*:s"
+        )
+      } else {
+        Seq.empty
+      }
+    },
     // Mock silencer for Scala3
     Test / doc / scalacOptions ++= List("-skip-packages", "com.github.ghik"),
     Compile / packageBin / mappings ~= {
-      _.filter {
-        case (_, path) => !path.startsWith("com/github/ghik")
-      }
+      _.filter { case (_, path) => !path.startsWith("com/github/ghik") }
     },
     Compile / packageSrc / mappings ~= {
-      _.filter {
-        case (_, path) => path != "silent.scala"
-      }
+      _.filter { case (_, path) => path != "silent.scala" }
     }
   )
 
   val cleanup = Def.task[ClassLoader => Unit] {
     val log = streams.value.log
 
-    {cl: ClassLoader =>
+    { cl: ClassLoader =>
       import scala.language.reflectiveCalls
 
       val objectClass = (Test / closeableObject).value
@@ -92,8 +103,7 @@ object Common extends AutoPlugin {
     { dep: XmlElem =>
       if ((dep \ "groupId").text == "org.reactivemongo") {
         asProvided.transform(dep).headOption.collectFirst {
-          case e: XmlElem => e.copy(
-            child = e.child :+ <scope>provided</scope>)
+          case e: XmlElem => e.copy(child = e.child :+ <scope>provided</scope>)
         }
       } else Some(dep)
     }

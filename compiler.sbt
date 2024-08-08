@@ -23,7 +23,8 @@ ThisBuild / scalacOptions ++= {
 
   if (v == "2.13") {
     Seq(
-      "-release", "8",
+      "-release",
+      "8",
       "-Xlint",
       "-g:vars"
     )
@@ -90,11 +91,13 @@ Compile / console / scalacOptions ~= {
   )
 }
 
-Test / compile / scalacOptions ~= {
+/* TODO: Remove
+Test / scalacOptions ~= {
   val excluded = Set("-Xfatal-warnings")
 
   _.filterNot(excluded.contains)
-}
+ }
+ */
 
 val filteredScalacOpts: Seq[String] => Seq[String] = {
   _.filterNot { opt => opt.startsWith("-X") || opt.startsWith("-Y") }
