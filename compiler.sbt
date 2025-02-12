@@ -1,10 +1,10 @@
-ThisBuild / scalaVersion := "2.12.19"
+ThisBuild / scalaVersion := "2.12.20"
 
 ThisBuild / crossScalaVersions := Seq(
   "2.11.12",
   scalaVersion.value,
-  "2.13.14",
-  "3.4.2"
+  "2.13.15",
+  "3.6.3"
 )
 
 crossVersion := CrossVersion.binary
@@ -110,7 +110,7 @@ Test / console / scalacOptions ~= filteredScalacOpts
 // Silencer
 ThisBuild / libraryDependencies ++= {
   if (!scalaBinaryVersion.value.startsWith("3")) {
-    val silencerVersion = "1.7.17"
+    val silencerVersion = "1.7.19"
 
     Seq(
       compilerPlugin(
