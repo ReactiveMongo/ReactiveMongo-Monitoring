@@ -24,8 +24,18 @@ object Common extends AutoPlugin {
       }
     },
     Compile / doc / scalacOptions ++= Opts.doc.title(name.value),
-    resolvers ++= Resolver.sonatypeOssRepos("staging") ++ Resolver
-      .sonatypeOssRepos("snapshots") :+ Resolver.typesafeRepo("releases"),
+    credentials ++= Seq(
+      Credentials(
+        "", // Empty realm credential - this one is actually used by Coursier!
+        "central.sonatype.com",
+        Publish.env("SONATYPE_USER"),
+        Publish.env("SONATYPE_PASS")
+      )
+    ),
+    resolvers ++= Seq(
+      "Central Testing repository" at "https://central.sonatype.com/api/v1/publisher/deployments/download",
+      Resolver.typesafeRepo("releases")
+    ),
     mimaFailOnNoPrevious := false,
     Test / closeableObject := "Common$",
     Test / testOptions += Tests.Cleanup(cleanup.value),
