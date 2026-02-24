@@ -170,12 +170,12 @@ workflows:
     jobs:
       - build_n_test:
           name: jdk8_scala212
-          scala_version: 2.12.20
+          scala_version: 2.12
           openjdk_version: 8
 
       - build_n_test:
           name: jdk10_scala213
-          scala_version: 2.13.16
+          scala_version: 2.13
           openjdk_version: 10
 
       - build_n_test:

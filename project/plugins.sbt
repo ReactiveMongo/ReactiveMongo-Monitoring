@@ -3,13 +3,11 @@ resolvers ++= Seq(
   "Tatami Releases" at "https://raw.github.com/cchantep/tatami/master/releases"
 )
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.6")
 
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.5")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.5")
 
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.3")
-
-addSbtPlugin("cchantep" % "sbt-scaladoc-compiler" % "0.3")
+addSbtPlugin("cchantep" % "sbt-scaladoc-compiler" % "0.6")
 
 addSbtPlugin("cchantep" % "sbt-hl-compiler" % "0.8")
 
