@@ -5,7 +5,7 @@ object Dependencies {
 
   val specsDeps = Def.setting[Seq[ModuleID]] {
     val ver = {
-      if (scalaBinaryVersion.value startsWith "3") {
+      if (scalaBinaryVersion.value.startsWith("3")) {
         "5.5.3"
       } else {
         "4.10.6"

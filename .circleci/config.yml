@@ -6,7 +6,7 @@ commands:
     parameters:
       sbt_version:
         type: string
-        default: "1.11.4"
+        default: "2.0.1"
     steps:
       - restore_cache:
           keys:
@@ -93,13 +93,13 @@ jobs:
     description: Build & Test
     parameters:
       openjdk_version:
-        type: integer
-        default: 8
+        type: string
+        default: '26.0'
       scala_version:
         type: string
 
     docker:
-      - image: cchantep/circleci-openjdk:<< parameters.openjdk_version >>-jdk
+      - image: cimg/openjdk:<< parameters.openjdk_version >>
 
     working_directory: ~/repo
 
@@ -117,7 +117,7 @@ jobs:
 
   publish_snapshots:
     docker:
-      - image: cchantep/circleci-openjdk:8-jdk
+      - image: cimg/openjdk:26.0
 
     working_directory: ~/repo
     
@@ -137,12 +137,11 @@ jobs:
                       exit 0
                     fi
 
-                    V=`sbt -J-Dsbt.log.noformat=true 'show version' 2>&1 | tail -n 2 | cut -d ']' -f 2 | grep SNAPSHOT | sed -e 's/[ \t]*//g'`
+                    V=$(sbt --server 'show version' 2>&1 | sed 's/\x1b\[0[Jm]//g' | grep --color=never '[0-9]\+\.[0-9]\+' | tail -1 | sed 's/\[info\]//' | xargs | tr -cd '[:alnum:]._-')
 
-                    if [ `echo "$V" | grep -- '-SNAPSHOT' | wc -l` -eq 0 ]; then
-                      S=`echo "$V" | perl -pe 's/([0-9]+)$/${\($1 + 1)}-SNAPSHOT/'`
-                      echo "Cannot bump $V to $S"
-                      echo "version in ThisBuild := \"$S\"" > version.sbt
+                    if [[ "$V" != *SNAPSHOT* ]]; then
+                      echo "Skip non snapshot: $V"
+                      exit 0
                     fi
                     
                     export PUBLISH_REPO_NAME="Sonatype Nexus Repository Manager"
@@ -154,7 +153,7 @@ jobs:
                       exit 1
                     fi
                     
-                    sbt +publish
+                    sbt --server +publish
 
       - save_cache:
           paths:
@@ -169,19 +168,17 @@ workflows:
   main_suite:
     jobs:
       - build_n_test:
-          name: jdk8_scala212
-          scala_version: 2.12
-          openjdk_version: 8
+          name: jdk26_scala212
+          scala_version: '2.12'
 
       - build_n_test:
-          name: jdk10_scala213
-          scala_version: 2.13
-          openjdk_version: 10
+          name: jdk17_scala213
+          scala_version: '2.13'
+          openjdk_version: '17.0'
 
       - build_n_test:
-          name: jdk11_scala3
-          scala_version: '3.3'
-          openjdk_version: 11
+          name: jdk26_scala3
+          scala_version: '3.4'
 
       - publish_snapshots:
           filters:
@@ -189,6 +186,6 @@ workflows:
               only:
                 - master
           requires:
-            - jdk8_scala212
-            - jdk10_scala213
-            - jdk11_scala3
+            - jdk26_scala212
+            - jdk17_scala213
+            - jdk26_scala3

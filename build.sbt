@@ -17,7 +17,7 @@ lazy val jmx = (project in file("jmx")).settings(
   name := s"${baseName}-jmx",
   description := "ReactiveMongo JMX",
   scalacOptions ++= {
-    if (scalaBinaryVersion.value startsWith "2.") {
+    if (scalaBinaryVersion.value.startsWith("2.")) {
       Seq("-P:silencer:globalFilters=.*NodeSetInfo\\ in\\ package\\ nodeset.*;.*name\\ in\\ class\\ MongoConnection.*")
     } else {
       Seq.empty

@@ -4,7 +4,7 @@ ThisBuild / crossScalaVersions := Seq(
   "2.11.12",
   scalaVersion.value,
   "2.13.18",
-  "3.3.7"
+  "3.4.3"
 )
 
 crossVersion := CrossVersion.binary
@@ -28,7 +28,7 @@ ThisBuild / scalacOptions ++= {
       "-Xlint",
       "-g:vars"
     )
-  } else if (v startsWith "2.") {
+  } else if (v.startsWith("2.")) {
     Seq(
       "-target:jvm-1.8",
       "-Xlint",
@@ -114,3 +114,5 @@ ThisBuild / libraryDependencies ++= {
     )
   } else Seq.empty
 }
+
+ThisBuild / scalacOptions ~= { _.distinct }
