@@ -44,7 +44,7 @@ object Common extends AutoPlugin {
       val next: XmlElem => Option[XmlElem] = providedInternalDeps
 
       val f: XmlElem => Option[XmlElem] = { dep =>
-        if ((dep \ "artifactId").text startsWith "silencer-lib") {
+        if ((dep \ "artifactId").text.startsWith("silencer-lib")) {
           Option.empty[XmlElem]
         } else {
           next(dep)
@@ -60,7 +60,7 @@ object Common extends AutoPlugin {
           "-Wconf:src=.*test/.*&msg=.*type\\ was\\ inferred.*(Any|Object).*:s",
           "-Wconf:msg=.*infix\\ operator.*:s"
         )
-      } else if (v startsWith "3.") {
+      } else if (v.startsWith("3.")) {
         Seq(
           "-Wconf:msg=.*type\\ was\\ inferred.*(Any|Object).*:s",
           "-Wconf:msg=.*infix\\ operator.*:s"
@@ -82,7 +82,7 @@ object Common extends AutoPlugin {
   val cleanup = Def.task[ClassLoader => Unit] {
     val log = streams.value.log
 
-    { cl: ClassLoader =>
+    { (cl: ClassLoader) =>
       import scala.language.reflectiveCalls
 
       val objectClass = (Test / closeableObject).value
@@ -111,7 +111,7 @@ object Common extends AutoPlugin {
       }
     })
 
-    { dep: XmlElem =>
+    { (dep: XmlElem) =>
       if ((dep \ "groupId").text == "org.reactivemongo") {
         asProvided.transform(dep).headOption.collectFirst {
           case e: XmlElem => e.copy(child = e.child :+ <scope>provided</scope>)

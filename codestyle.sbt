@@ -3,10 +3,7 @@ ThisBuild / scalafmtOnCompile := true
 inThisBuild(
   List(
     // scalaVersion := "2.13.3",
-    semanticdbEnabled := true,
+    semanticdbEnabled := scalaBinaryVersion.value != "2.11",
     semanticdbVersion := scalafixSemanticdb.revision,
-    scalafixDependencies ++= Seq(
-      "com.github.liancheng" %% "organize-imports" % "0.5.0"
-    )
   )
 )
