@@ -14,6 +14,7 @@ object Common extends AutoPlugin {
 
   override def projectSettings = Seq(
     organization := "org.reactivemongo",
+    semanticdbEnabled := scalaBinaryVersion.value != "2.11",
     autoAPIMappings := true,
     testFrameworks ~= { _.filterNot(_ == TestFrameworks.ScalaTest) },
     Compile / doc / scalacOptions ++= {
