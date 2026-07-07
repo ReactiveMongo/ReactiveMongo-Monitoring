@@ -129,7 +129,7 @@ jobs:
           keys:
           - *scala_cache_key
 
-      - deploy:
+      - run:
           name: Publish artifacts to Sonatype Snapshots
           command: |
                     if [ ! "${CIRCLE_BRANCH}" = "master" ]; then
